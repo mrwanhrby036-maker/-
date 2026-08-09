@@ -1,0 +1,84 @@
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    overflow: hidden;
+    background: #040307; 
+    background-image:
+        radial-gradient(circle at 50% 35%, #1d1431 0%, transparent 65%),
+        linear-gradient(180deg, #000000 0%, #070012 100%);
+    color: #eee;
+}
+
+#container {
+    position: fixed;
+    inset: 0;
+}
+
+.vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9;
+    background: radial-gradient(circle at center, rgba(0,0,0,0) 65%, rgba(0,0,0,.5) 100%);
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.instructions {
+    position: fixed;
+    left: 24px;
+    bottom: 24px;
+    transform: none;
+    padding: 10px 20px;
+    font-size: 12px;
+    text-align: left;
+    pointer-events: none;
+    color: #d0b0ff;
+    background: rgba(18, 15, 40, 0.25);
+    border: 1px solid rgba(122, 70, 255, 0.28);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    z-index: 10;
+    box-shadow: 0 4px 20px rgba(0,0,0,.45);
+}
+
+#morphButton {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    padding: 12px 30px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(230, 220, 255, 0.9);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50px;
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+#morphButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+    color: white;
+}
+
+#morphButton:active {
+    transform: translateX(-50%) scale(0.98);
+}

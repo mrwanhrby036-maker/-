@@ -1,14 +1,14 @@
 /* #####################################################################
    منصتي الرقمية — ملف الجافا سكريبت (ملف واحد)
      الجزء ١: الإعدادات والمحتوى (الأقسام ← الوحدات ← الدروس) ← بيتعدل
-     الجزء ٢: بنك الأسئلة (التدريب النهائي لكل درس)          ← بيتعدل
+     الجزء ٢: بنك الأسئلة (الامتحان النهائي لكل درس)          ← بيتعدل
      الجزء ٣: برمجة المنصة                                   ← مش محتاج يتعدل
    ##################################################################### */
 
 
 /* =====================================================================
    الجزء ١: الإعدادات والمحتوى
-   قسم التاريخ: الدرس الأول (بناء الدولة المصرية) من كتاب الوزارة — قسم اللغة العربية لسه فاضي
+   قسم التاريخ: الدرس الأول من كتاب الوزارة «التاريخ الوطني» — قسم اللغة العربية لسه فاضي
    ===================================================================== */
 const SITE = {
   name: "منصتي الرقمية",
@@ -46,6 +46,7 @@ const SITE = {
            { who: "student", text: "..." },       ← الطالب
          ],
          example: { title: "تشبيه", text: "..." },   ← (اختياري) مثال أو تشبيه
+                  (أو قائمة أمثلة؛ كل مثال ممكن يكون text أو quote أو table أو img + caption لصورة من فولدر images)
          task: {                                  ← (اختياري) التطبيق العملي
            steps: ["...", "..."],                 ← خطوات مرقمة
            lang: "html" | "js" | "css" | "text",  ← html/js/css بيتشغّلوا جوه المنصة
@@ -334,6 +335,8 @@ const SUBJECTS = [
                 ] } },
               { title: "قال جمال حمدان في كتابه «شخصية مصر»", source: "د. جمال حمدان — شخصية مصر: دراسة في عبقرية المكان",
                 quote: "في مصر بالذات لن تفهم كيانها أو تاريخها بشكل صحيح خارج إطار الموقع وبغير الإشارة إليه؛ فمصر موضعًا دولة نهر، وموقعًا دولة برزخ، ولو لم يكن النيل فرضًا لفرض الموقع نفسه يقينًا" },
+              { title: "أنشودة النيل", source: "رتّلها المصري القديم تقديسًا لدور النيل في حياته",
+                quote: "تحيةً لك يا (حابي) الذي يخرج من الأرض ويصل لكي يعطي الحياة لمصر، أنت الذي أخفى مصادره في الظلمات، أنت الفيضان الذي ينساب على الأرض الخضراء؛ ليمنح الحياة إلى جميع هؤلاء الظمأى، وعندما ترتفع تشدو الأرض كلها فرحًا" },
               { title: "المصري القديم والنيل", source: "من كتاب الموتى",
                 quote: "لم ألوث ماء النهر، لم أمنع الماء في موسمه، لم أُقِم سدًّا أمام الماء المتدفق" },
             ],
@@ -447,8 +450,8 @@ const SUBJECTS = [
 
 /* =====================================================================
    الجزء ٢: بنك الأسئلة (التدريب النهائي لكل درس)
-   أسئلة الدرس الأول (التاريخ) من الكتاب
-   type : "mcq" | "tf" | "fill" | "match"      level: 1 سهل | 2 متوسط | 3 صعب
+   أسئلة الدرس الأول (التاريخ)
+   type : "mcq" | "tf" | "fill" | "match" | "essay" (مقالي)      level: 1 سهل | 2 متوسط | 3 صعب
    ===================================================================== */
 const QUESTIONS = [
   /* ---------- الدرس الأول: بناء الدولة المصرية واستمرارها عبر التاريخ ---------- */
@@ -479,6 +482,22 @@ const QUESTIONS = [
     { a: "المجال الجوي", b: "المساحة الرأسية التي تعلو اليابس والمياه الإقليمية" },
     { a: "دولة البرزخ", b: "دولة تربط بين كتلتين يابستين كبيرتين أو تفصل بين بحرين مهمين" },
     { a: "الهوية الوطنية", b: "خصائص تميز الشعب عبر التاريخ وتعكس انتماءه الوطني" }] },
+  /* ---------- أسئلة مقالية: بيصححها «المصحح الذكي» (ملف ai_grader.py) ----------
+     model  : الإجابة النموذجية من المنهج
+     points : الأفكار الأساسية اللي لازم تكون في إجابة الطالب
+     marks  : درجة السؤال */
+  { id: "e1", lesson: "u1l1", type: "essay", level: 3, marks: 4, q: "«تنشأ الدولة نتيجة تضافر عدد من المقومات التي تحول المجتمع من تجمعات بشرية مشتتة إلى كيان سياسي منظم». وضّح مقومات نشأة الدولة المصرية.",
+    model: "تنشأ الدولة نتيجة تضافر عدد من المقومات التي تحول المجتمع من تجمعات بشرية مشتتة إلى كيان سياسي منظم، وتتمثل مقومات نشأة الدولة المصرية في: الموقع الجغرافي والحدود الطبيعية، والموارد الطبيعية، والتجانس البشري والوحدة الوطنية، والحكومة المركزية القوية، والقوة العسكرية، والحفاظ على الهوية المصرية.",
+    points: ["الموقع الجغرافي والحدود الطبيعية", "الموارد الطبيعية", "التجانس البشري والوحدة الوطنية", "الحكومة المركزية القوية", "القوة العسكرية", "الحفاظ على الهوية المصرية"] },
+  { id: "e2", lesson: "u1l1", type: "essay", level: 3, marks: 4, q: "وضّح أثر خروج الشعب المصري في ثورة ١٩١٩م على أوضاع مصر السياسية.",
+    model: "أظهر التعبير الصريح عن رفض الشعب للاحتلال البريطاني والتفاف المصريين حول هدف الاستقلال. وأجبرت المشاركة الشعبية سلطات الاحتلال على إعادة النظر في سياساتها. وأسهمت الثورة في تعزيز الوعي الوطني وترسيخ قيم المواطنة.",
+    points: ["رفض الاحتلال البريطاني", "التفاف المصريين حول هدف الاستقلال", "إجبار الاحتلال على إعادة النظر في سياساته", "تعزيز الوعي الوطني وترسيخ قيم المواطنة"] },
+  { id: "e3", lesson: "u1l1", type: "essay", level: 3, marks: 4, q: "وضّح: كيف ساعد الموقع الجغرافي لمصر على استقرارها عبر التاريخ؟",
+    model: "ساعد الموقع الجغرافي المتميز لمصر على تحقيق استقرارها عبر التاريخ؛ حيث تمتعت بحدود طبيعية مثّلت حواجز قامت بدور حماية قلب الدولة (الوادي والدلتا)، وهو ما أتاح للمصريين الفرصة للتركيز على الزراعة والعمران وتنظيم شئون حياتهم، مما دعم نشأة الدولة وترسيخ دعائمها واستقرارها عبر العصور.",
+    points: ["حدود طبيعية تمثل حواجز", "حماية الوادي والدلتا", "التركيز على الزراعة والعمران", "استقرار الدولة"] },
+  { id: "e4", lesson: "u1l1", type: "essay", level: 3, marks: 4, q: "«الشعب المصري تميز بتجانس ثقافي فريد منذ البداية». في ضوء العبارة، استنتج أهمية تجانس الشعب المصري بالنسبة لقوة الدولة.",
+    model: "تشكيل اتحاد متماسك يصعب تفتيته نتيجة انصهار السكان في بوتقة ثقافية واحدة منذ فجر التاريخ. وجعل الوحدة السياسية أمرًا طبيعيًا للدولة. وحماية المصريين من التأثر بثقافة المحتل، والحفاظ على الهوية المصرية المميزة واستقرار الدولة عبر التاريخ.",
+    points: ["اتحاد متماسك يصعب تفتيته", "انصهار السكان في بوتقة ثقافية واحدة", "الوحدة السياسية أمر طبيعي", "عدم التأثر بثقافة المحتل والحفاظ على الهوية"] },
 ];
 
 
@@ -498,6 +517,7 @@ const QUESTIONS = [
   /* ---------------- أيقونات SVG ---------------- */
   const ICONS = {
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/>',
     pyramid: '<path d="M12 3L2 20h20L12 3z"/><path d="M12 3l3.5 17"/><path d="M7.2 11.5h7"/><path d="M4.6 16h11.3"/>',
     bookPen: '<path d="M3 5.5c2.5-1.2 5.5-1.2 8 .5v13c-2.5-1.7-5.5-1.7-8-.5z"/><path d="M11 6v13"/><path d="M14 19l.6-2.6 6-6a1.4 1.4 0 0 1 2 2l-6 6z"/><path d="M11 6c1.4-1 3-1.3 4.6-1.2"/>',
     login: '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M4 12h11"/><path d="M11 8l4 4-4 4"/>',
@@ -557,6 +577,8 @@ const QUESTIONS = [
     swap: '<path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/>',
     link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
     skip: '<path d="M19 20L9 12l10-8z"/><path d="M5 19V5"/>',
+    send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+    brain: '<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h1V4z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h-1V4z"/><path d="M6 12h4M14 12h4M7 8h3M14 16h3"/>',
     cup: '<path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v2M10 2v2M14 2v2"/>',
   };
   const I = (n, extra = "") => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true" ${extra}>${ICONS[n] || ""}</svg>`;
@@ -679,7 +701,7 @@ const QUESTIONS = [
   }
 
   /* ---------------- البيانات ---------------- */
-  const TYPES = { mcq: "اختيار من متعدد", tf: "صح أم خطأ", fill: "أكمل", match: "توصيل" };
+  const TYPES = { mcq: "اختيار من متعدد", tf: "صح أم خطأ", fill: "أكمل", match: "توصيل", essay: "سؤال مقالي" };
   const LEVELS = { 1: "سهل", 2: "متوسط", 3: "صعب" };
   // كل درس بيعرف هو في أنهي قسم وأنهي وحدة
   const LESSONS = SUBJECTS.flatMap((s) => s.units.flatMap((u, ui) => { u.subject = s; u.unum = ui + 1;
@@ -692,13 +714,6 @@ const QUESTIONS = [
   const qOf = (lessonId) => bank().filter((q) => q.lesson === lessonId);
   const typeTag = (t) => `<span class="tag">${TYPES[t] || t}</span>`;
   const levelTag = (l) => `<span class="tag l${l}">${LEVELS[l] || ""}</span>`;
-  function correctText(q) {
-    if (q.type === "mcq") return q.options[q.answer];
-    if (q.type === "tf") return q.answer ? "صح" : "خطأ";
-    if (q.type === "fill") return [].concat(q.answer)[0];
-    if (q.type === "match") return q.pairs.map((p) => `${p.a}: ${p.b}`).join(" ، ");
-    return "";
-  }
 
   /* ---------------- التقدم ---------------- */
   const progress = () => store.get("progress", {});
@@ -718,10 +733,32 @@ const QUESTIONS = [
     if (ok) { s.correct++; s.streak++; s.bestStreak = Math.max(s.bestStreak, s.streak); } else s.streak = 0;
     store.set("stats", s);
   }
-  const bumpStat = (k) => { const s = stats(); s[k] = (s[k] || 0) + 1; store.set("stats", s); };
-  const mistakes = () => store.get("mistakes", []);
-  const addMistake = (id) => { if (!id) return; const m = mistakes(); if (!m.includes(id)) { m.push(id); store.set("mistakes", m); } };
-  const removeMistake = (id) => store.set("mistakes", mistakes().filter((x) => x !== id));
+
+  /* ---------------- الامتحان النهائي + المصحح الذكي ----------------
+     المصحح الذكي برنامج Python (ملف ai_grader.py) بيشتغل على نفس الجهاز:
+     المنصة بتبعتله الإجابات، وهو بيراجعها سؤال سؤال ويرجّع النتيجة */
+  // لينك المصحح الذكي: لو المنصة والمصحح على نفس الموقع (Render أو الجهاز) سيبه فاضي.
+  // لو المنصة على GitHub Pages والمصحح على Render، اكتب لينك Render هنا، مثال: "https://my-platform.onrender.com"
+  const GRADER_URL = "";
+  const API = GRADER_URL ? GRADER_URL.replace(/\/$/, "") + "/api/" : location.protocol.startsWith("http") ? "api/" : "http://localhost:8765/api/";
+  const LOCAL = location.protocol === "file:" || /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname);
+  async function api(path, body) {
+    const r = await fetch(API + path, body
+      ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+      : { cache: "no-store" });
+    let j = {}; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) { const err = new Error(j.error || "حصل خطأ عند المصحح"); err.server = true; throw err; }
+    return j;
+  }
+  const exams = () => store.get("exam", {});
+  const examOf = (lid) => exams()[lid] || null;
+  const setExam = (lid, v) => { const e = exams(); e[lid] = v; store.set("exam", e); };
+  const examPending = (e) => !!(e && e.sid && (e.status === "queued" || e.status === "reviewing"));
+  const MARKS = { mcq: 1, tf: 1, fill: 1, match: 2 }, PASS = 50;
+  const marksOf = (q) => (q.type === "essay" ? q.marks || 4 : MARKS[q.type] || 1);
+  const marksWord = (m) => (m === 1 ? "درجة واحدة" : m === 2 ? "درجتين" : `${ar(m)} درجات`);
+  const qWord = (n) => (n === 1 ? "سؤال واحد" : n === 2 ? "سؤالين" : `${ar(n)} ${n <= 10 ? "أسئلة" : "سؤال"}`);
+  const num = (x) => ar(String(Math.round(x * 10) / 10).replace(".", "٫"));
 
   /* ---------------- التنقل ---------------- */
   function go(name, params = {}, push = true) {
@@ -729,8 +766,10 @@ const QUESTIONS = [
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     if (push && current) history.push(current);
     current = { name, params };
-    const full = name === "bye";
-    $top.classList.toggle("hidden", full);
+    window.onbeforeunload = null;
+    const full = name === "bye", locked = name === "exam";
+    $top.classList.toggle("hidden", full || locked);
+    document.body.classList.toggle("exam-mode", locked);
     $main.style.maxWidth = full ? "none" : "";
     $main.style.padding = full ? "0" : "";
     screens[name](params);
@@ -740,7 +779,7 @@ const QUESTIONS = [
 
   /* الإطار المتحرك بتاع القائمة: بيروح عند الزرار اللي عليه الماوس، ولما يسيبه يرجع للصفحة الحالية */
   const $navBox = document.querySelector(".nav-box"), $rect = document.querySelector(".main-nav .rect");
-  const NAV_OF = { home: "home", subject: "lessons", lesson: "lessons" };
+  const NAV_OF = { home: "home", subject: "lessons", lesson: "lessons", examStatus: "lessons" };
   function outlineTo(btn) {
     if (!btn || !$navBox.clientWidth) { $rect.style.strokeDashoffset = "5"; $rect.style.strokeDasharray = "0 0 10 40 10 40"; return; }
     const w = $navBox.clientWidth, h = $navBox.clientHeight, P = 2 * (w + h);
@@ -869,79 +908,6 @@ const QUESTIONS = [
   }
 
   /* =====================================================================
-     محرك الامتحان/التدريب
-     ===================================================================== */
-  const clock = (s) => ar(`${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`);
-  function runQuiz(host, questions, opts = {}) {
-    let i = 0; const results = []; let left = opts.timer || 0; let ended = false;
-    const end = () => {
-      if (ended) return; ended = true; clearTimers();
-      for (let k = results.length; k < questions.length; k++) results.push({ q: questions[k], ok: false, given: "لم يُجب (انتهى الوقت)" });
-      opts.onFinish ? opts.onFinish(results) : resultScreen(host, results, opts);
-    };
-    const show = () => {
-      const q = questions[i];
-      host.innerHTML = `
-        <div class="card">
-          <div class="q-head">
-            <span>سؤال ${ar(i + 1)} من ${ar(questions.length)} &nbsp; ${typeTag(q.type)} ${levelTag(q.level)}</span>
-            <span>${opts.timer ? `<span class="tag" data-clock>${I("timer")} ${clock(left)}</span> ` : ""}${I("check")} ${ar(results.filter((r) => r.ok).length)}</span>
-          </div>
-          <div class="progress" style="margin-bottom:18px"><span style="width:${(i / questions.length) * 100}%"></span></div>
-          <div data-qbox></div><div data-fb></div>
-        </div>`;
-      renderQ(q, $("[data-qbox]", host), (ok, given) => {
-        if (ended) return;
-        results.push({ q, ok, given }); recordAnswer(ok);
-        if (ok) { sfx.ok(); if (opts.mode === "mistakes") removeMistake(q.id); } else { sfx.bad(); addMistake(q.id); }
-        $("[data-fb]", host).innerHTML = `
-          <div class="feedback ${ok ? "ok" : "bad"}">${ok ? `${I("check")} ${praise()} إجابة صحيحة` : `${I("x")} إجابة غير صحيحة — الصح: <b>${esc(correctText(q))}</b>`}
-            ${q.explain ? `<br><span style="font-weight:400">${I("bulb")} ${esc(q.explain)}</span>` : ""}</div>
-          <div class="btn-row"><button class="btn small" data-next>${i + 1 < questions.length ? `السؤال التالي ${I("next")}` : `عرض النتيجة ${I("flag")}`}</button></div>`;
-        $("[data-next]", host).onclick = () => { sfx.click(); i++; i < questions.length ? show() : end(); };
-      });
-    };
-    if (opts.timer) timers.push(setInterval(() => {
-      left--; const c = $("[data-clock]", host); if (c) c.innerHTML = `${I("timer")} ${clock(Math.max(0, left))}`;
-      if (left <= 0) { toast("الوقت خلص!"); end(); }
-    }, 1000));
-    show();
-  }
-
-  function resultScreen(host, results, opts = {}) {
-    const score = results.filter((r) => r.ok).length, total = results.length, p = pct(score, total);
-    p >= 50 ? sfx.win() : sfx.bad();
-    const byLesson = {};
-    results.forEach((r) => { const k = r.q.lesson; byLesson[k] = byLesson[k] || { s: 0, t: 0 }; byLesson[k].t++; if (r.ok) byLesson[k].s++; });
-    const keys = Object.keys(byLesson);
-    host.innerHTML = `
-      <div class="card result">
-        <div class="big-ico ${p >= 50 ? "ok" : "bad"}">${I(p === 100 ? "trophy" : p >= 50 ? "star" : "trend")}</div>
-        <div class="score">${ar(score)} / ${ar(total)}</div>
-        <p><b>${ar(p)}٪</b> — ${p === 100 ? "لقد فعلتها! كل إجاباتك صح" : p >= 85 ? "ممتاز جدًا!" : p >= 50 ? "خطوة ممتازة، كمّل!" : "محتاج تراجع الدروس وتجرب تاني"}</p>
-        <div class="btn-row" style="justify-content:center">
-          ${opts.extraBtn ? `<button class="btn" data-extra>${opts.extraBtn.label}</button>` : ""}
-          <button class="btn ${opts.extraBtn ? "soft" : ""}" data-again>${I("refresh")} حاول تاني</button>
-          <button class="btn soft" data-rev>${I("list")} مراجعة الإجابات</button>
-          <button class="btn soft" data-home>${I("home")} الرئيسية</button>
-        </div>
-      </div>
-      ${keys.length > 1 ? `
-      <div class="section-label">${I("chart")} نتيجتك في كل درس</div>
-      <div class="card bars">${keys.map((k) => `<div class="bar-row"><span class="lbl">${esc(lessonName(k))}</span><div class="progress"><span style="width:${pct(byLesson[k].s, byLesson[k].t)}%"></span></div><b>${ar(byLesson[k].s)}/${ar(byLesson[k].t)}</b></div>`).join("")}</div>` : ""}
-      <div data-review style="display:none">
-        <div class="section-label">${I("list")} مراجعة الإجابات</div>
-        <div class="review">${results.map((r, n) => `
-          <div class="rv ${r.ok ? "" : "bad"}"><small>${ar(n + 1)}. ${esc(lessonName(r.q.lesson))} — ${TYPES[r.q.type]}</small><div>${esc(r.q.q)}</div>
-          <small>إجابتك: <b>${esc(r.given)}</b> ${r.ok ? "" : `— الصح: <b>${esc(correctText(r.q))}</b>`}</small></div>`).join("")}</div>
-      </div>`;
-    $("[data-again]", host).onclick = () => { sfx.click(); opts.again ? opts.again() : runQuiz(host, shuffle(results.map((r) => r.q)), opts); };
-    $("[data-home]", host).onclick = () => go("home");
-    $("[data-rev]", host).onclick = () => { const r = $("[data-review]", host); r.style.display = r.style.display === "none" ? "block" : "none"; r.scrollIntoView({ behavior: "smooth" }); };
-    if (opts.extraBtn) $("[data-extra]", host).onclick = opts.extraBtn.fn;
-  }
-
-  /* =====================================================================
      الشاشات
      ===================================================================== */
   const screens = {};
@@ -957,6 +923,7 @@ const QUESTIONS = [
     </button>`; }).join("")}</div>`;
   const bindLessons = () => $$("[data-lesson]").forEach((b) => (b.onclick = () => { sfx.click(); go("lesson", { id: b.dataset.lesson }); }));
   const unitShort = (u) => u.title.split(":")[0];
+  const lessonsWord = (n) => n === 1 ? "درس واحد" : n === 2 ? "درسين" : `${ar(n)} ${n <= 10 ? "دروس" : "درس"}`;
 
   /* ---------- الرئيسية: الأقسام ---------- */
   screens.home = () => {
@@ -968,7 +935,7 @@ const QUESTIONS = [
           <h1 class="page-title">${currentUser() ? `أهلًا يا ${esc(firstName())}` : `أهلًا بيك في ${esc(SITE.name)}`}</h1>
           <p class="page-sub">${esc(SITE.grade)} — اختار القسم اللي عايز تذاكره</p>
         </div>
-        <div class="home-prog"><span>خلّصت ${ar(doneCount())} من ${ar(LESSONS.length)} ${LESSONS.length === 1 ? "درس" : "دروس"}</span><div class="progress"><span style="width:${overall}%"></span></div></div>
+        <div class="home-prog"><span>خلّصت ${ar(doneCount())} من ${lessonsWord(LESSONS.length).replace(" واحد", "")}</span><div class="progress"><span style="width:${overall}%"></span></div></div>
       </div>
       ${last ? `<div class="continue"><div style="flex:1"><small>كمّل من حيث وقفت — ${esc(last.subject.title)}</small><h3>${esc(last.title)}</h3></div><button class="btn small" data-cont>كمّل ${I("next")}</button></div>` : ""}
 
@@ -980,7 +947,7 @@ const QUESTIONS = [
           <span class="ico">${I(sb.icon)}</span>
           <span class="grow">
             <h3>${esc(sb.title)}</h3>
-            <p>${ls.length ? `${sb.units.length === 1 ? "وحدة واحدة" : `${ar(sb.units.length)} وحدات`} • ${ls.length === 1 ? "درس واحد" : `${ar(ls.length)} دروس`}` : "لسه مفيش محتوى — هيتضاف قريبًا"}</p>
+            <p>${ls.length ? `${sb.units.length === 1 ? "وحدة واحدة" : `${ar(sb.units.length)} وحدات`} • ${lessonsWord(ls.length)}` : "لسه مفيش محتوى — هيتضاف قريبًا"}</p>
             ${ls.length ? `<span class="progress"><span style="width:${pct(dn, ls.length)}%"></span></span>` : ""}
           </span>
           ${I("next")}
@@ -1032,29 +999,64 @@ const QUESTIONS = [
       </div>` : ""}
     </div>`;
   };
-  // أول ضغطة: بيبدأ التحميل والحركة — بعد ما الحركة تخلص الزرار بيبقى «فتح» ويفتح الملف على Drive
+  // «تحميل»: الحركة بس — بعد ما تخلص يظهر «فتح»، والضغط على «فتح» هو اللي بيحمّل الملف
   function bindDownload(box, d) {
     if (!box) return;
     const lab = $(".dl-label", box), inp = $(".dl-input", box);
-    const openView = () => window.open(d.view, "_blank", "noopener");
-    lab.addEventListener("click", (e) => {
-      if (e.target === inp) return;
-      if (inp.checked) { e.preventDefault(); if (lab.classList.contains("done")) openView(); return; }
-      if (!navigator.onLine) { e.preventDefault(); toast("محتاج تكون متصل بالإنترنت عشان تحمّل الملف"); }
-    });
-    inp.addEventListener("change", () => {
-      if (!inp.checked) { if (lab.classList.contains("done")) { inp.checked = true; openView(); } return; }
-      sfx.click();
+    const openFile = () => {
+      if (!navigator.onLine) return toast("محتاج تكون متصل بالإنترنت عشان تحمّل الملف");
+      sfx.pop();
       const a = document.createElement("a");
       a.href = d.file; a.target = "_blank"; a.rel = "noopener";
       document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => { lab.classList.add("done"); lab.title = "فتح الملف على Google Drive"; }, 3600);
+    };
+    lab.addEventListener("click", (e) => {
+      if (e.target === inp) return;
+      if (inp.checked) { e.preventDefault(); if (lab.classList.contains("done")) openFile(); }
     });
+    inp.addEventListener("change", () => {
+      if (!inp.checked) { inp.checked = true; if (lab.classList.contains("done")) openFile(); return; }
+      sfx.click();
+      setTimeout(() => { lab.classList.add("done"); lab.title = "فتح الملف"; }, 3600);
+    });
+  }
+
+  /* ---------- كارت الامتحان النهائي في آخر الدرس ---------- */
+  function examCard(l, host, closingHost) {
+    const qs = qOf(l.id), e = examOf(l.id);
+    const nEs = qs.filter((q) => q.type === "essay").length, nObj = qs.length - nEs;
+    const total = qs.reduce((t, q) => t + marksOf(q), 0);
+    let body;
+    if (!qs.length) body = `<div class="placeholder">${I("info")} لسه مفيش أسئلة للدرس ده.</div>`;
+    else if (examPending(e)) body = `
+      <div class="exam-state wait">${I("brain")}<div><b>إجاباتك عند المصحح الذكي</b><small>بيراجعها دلوقتي — النتيجة هتظهرلك أول ما يخلص.</small></div></div>
+      <div class="btn-row"><button class="btn" data-exstatus>${I("eye")} متابعة التصحيح</button></div>`;
+    else if (e && e.status === "done") body = `
+      <div class="exam-state ${e.passed ? "ok" : "bad"}">${I(e.passed ? "trophy" : "trend")}<div><b>آخر نتيجة: ${num(e.score)} من ${num(e.total)} (${ar(e.percent)}٪)</b>
+        <small>${e.passed ? "ناجح — برافو عليك!" : "محتاج ٥٠٪ عشان تنجح — راجع الدرس وجرّب تاني."}</small></div></div>
+      <div class="btn-row"><button class="btn soft" data-exstatus>${I("list")} تفاصيل التصحيح</button><button class="btn" data-exstart>${I("refresh")} امتحن تاني</button></div>`;
+    else body = `
+      <p class="exam-intro">امتحان على الدرس كله في صفحة لوحده: <b>${qWord(nObj)} موضوعي</b>${nEs ? ` و<b>${qWord(nEs)} مقالي</b>` : ""} — المجموع <b>${ar(total)} درجة</b>.</p>
+      <ul class="exam-rules">
+        <li>مفيش تصحيح أثناء الحل، جاوب على كل الأسئلة براحتك.</li>
+        <li>في الآخر اضغط «إرسال الإجابات»، والمصحح الذكي هيراجعها سؤال سؤال.</li>
+        <li>النتيجة بتوصلك بعد المراجعة، والنجاح من ٥٠٪.</li>
+      </ul>
+      <div class="btn-row"><button class="btn" data-exstart>${I("play")} ابدأ الامتحان</button></div>`;
+    host.innerHTML = `<h3 class="block-title">${I("pencil")} الامتحان النهائي</h3>${body}`;
+    const st = $("[data-exstart]", host), sv = $("[data-exstatus]", host);
+    if (st) st.onclick = () => { sfx.click(); go("exam", { id: l.id }); };
+    if (sv) sv.onclick = () => { sfx.click(); go("examStatus", { id: l.id }); };
+    // كلمة الختام وزرار التحميل بيظهروا بس بعد النجاح في الامتحان
+    if (e && e.ever && (l.closing || l.download)) {
+      closingHost.innerHTML = closingCard(l);
+      if (l.download) bindDownload($("[data-dl]", closingHost), l.download);
+    } else closingHost.innerHTML = "";
   }
 
   /* =====================================================================
      الدرس (صفحة واحدة بتنزل لتحت):
-     أهداف الدرس ← الجزء ١ ← الجزء ٢ ... ← الملخص ← التدريب النهائي
+     أهداف الدرس ← الجزء ١ ← الجزء ٢ ... ← الملخص ← الامتحان النهائي (في صفحة لوحده)
      كل جزء: حوار ← مثال ← تطبيق عملي ← تحقق من النقاط الأساسية
      الجزء اللي بعده بيظهر لوحده أول ما تجاوب أسئلة التحقق صح
      ===================================================================== */
@@ -1079,24 +1081,14 @@ const QUESTIONS = [
     const $parts = $("[data-parts]"), $end = $("[data-end]");
     let opening = true; // وقت فتح الصفحة: الأجزاء المحلولة قبل كده بتظهر من غير ما الصفحة تنزل
 
-    // الملخص + التدريب النهائي (بيظهروا بعد آخر جزء)
+    // الملخص + الامتحان النهائي (بيظهروا بعد آخر جزء)
     const showEnd = () => {
       if ($end.dataset.on) return; $end.dataset.on = "1";
       $end.innerHTML = `
         ${(l.keypoints || []).length ? `<div class="card block"><h3 class="block-title">${I("list")} ملخص الدرس</h3><ul class="key-list">${l.keypoints.map((k) => `<li>${esc(k)}</li>`).join("")}</ul></div>` : ""}
-        <div class="card block"><h3 class="block-title">${I("pencil")} التدريب النهائي</h3><div data-practice></div></div>
-        ${l.closing || l.download ? closingCard(l) : ""}`;
-      if (l.download) bindDownload($("[data-dl]", $end), l.download);
-      const qs = qOf(id), host = $("[data-practice]", $end);
-      if (!qs.length) { host.innerHTML = `<div class="placeholder">${I("info")} لسه مفيش أسئلة للدرس ده.</div>`; return; }
-      const start = () => runQuiz(host, shuffle(qs).sort((a, b) => (a.level || 1) - (b.level || 1)), {
-        mode: "practice",
-        onFinish: (res) => {
-          saveLesson(id, res.filter((r) => r.ok).length, res.length);
-          resultScreen(host, res, { again: start, extraBtn: nextL ? { label: `الدرس التالي ${I("next")}`, fn: () => go("lesson", { id: nextL.id }) } : null });
-        },
-      });
-      start();
+        <div class="card block exam-card" data-practice></div>
+        <div data-closing></div>`;
+      examCard(l, $("[data-practice]", $end), $("[data-closing]", $end));
     };
 
     const addPart = (i) => {
@@ -1138,10 +1130,11 @@ const QUESTIONS = [
         let inner = "";
         if (ex.text) inner += `<div class="example-box">${esc(ex.text)}</div>`;
         if (ex.quote) inner += `<blockquote class="quote-box">«${esc(ex.quote)}»${ex.source ? `<cite>${esc(ex.source)}</cite>` : ""}</blockquote>`;
+        if (ex.img) inner += `<figure class="lesson-fig"><img src="${esc(ex.img)}" alt="${esc(ex.caption || ex.title || "")}" loading="lazy">${ex.caption ? `<figcaption>${esc(ex.caption)}</figcaption>` : ""}</figure>`;
         if (ex.table) inner += `<div class="tbl-wrap"><table class="lesson-tbl">
             ${ex.table.head ? `<thead><tr>${ex.table.head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>` : ""}
             <tbody>${ex.table.rows.map((r) => `<tr>${r.map((c, ci) => `<td>${ci === 0 && ex.table.head ? `<b>${esc(c)}</b>` : esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
-        html += `<div class="block card"><h3 class="block-title">${I(ex.table ? "list" : ex.quote ? "book" : "bulb")} ${esc(ex.title || "مثال توضيحي")}</h3>${inner}</div>`;
+        html += `<div class="block card"><h3 class="block-title">${I(ex.img ? "image" : ex.table ? "list" : ex.quote ? "book" : "bulb")} ${esc(ex.title || "مثال توضيحي")}</h3>${inner}</div>`;
       });
       if (part.task) {
         const t = part.task, runnable = ["html", "js", "css"].includes(t.lang), isText = !t.lang || t.lang === "text";
@@ -1207,14 +1200,22 @@ const QUESTIONS = [
           $("[data-out] iframe", $after).srcdoc = `<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"><style>body{font-family:Tahoma,Arial,sans-serif}</style></head><body>${doc}</body></html>`;
         };
         const $v = $("[data-verify]", $after);
-        if ($v) $v.onclick = () => {
-          // المقارنة بتتجاهل التشكيل والهمزات والتاء المربوطة عشان الطالب ميتحاسبش على الإملاء
-          const code = norm($code.value);
-          const missing = t.check.filter((c) => !code.includes(norm(c)));
+        if ($v) $v.onclick = async () => {
+          // المصحح الذكي بيفهم الإجابة حتى لو من غير تشكيل أو همزات أو بأسلوب الطالب
           const out = $("[data-verify-out]", $after);
           if (!$code.value.trim()) { sfx.bad(); out.innerHTML = `<div class="feedback bad">${I("x")} اكتب إجابتك الأول.</div>`; return; }
-          if (!missing.length) { sfx.win(); out.innerHTML = `<div class="praise">${I("trophy")} لقد فعلتها! إجابتك فيها كل المطلوب.</div>`; }
-          else { sfx.bad(); out.innerHTML = `<div class="feedback bad">${I("x")} قربت! لسه ناقص: <b>${missing.map(esc).join(" ، ")}</b> — جرّب تستخدم التلميحات.</div>`; }
+          $v.disabled = true;
+          out.innerHTML = `<div class="feedback info thinking">${I("brain")} المصحح الذكي بيقرأ إجابتك<span class="dots"><i></i><i></i><i></i></span></div>`;
+          try {
+            const r = await api("check", { lesson: l.id, part: pi, text: $code.value });
+            if (r.ok) { sfx.win(); out.innerHTML = `<div class="praise">${I("trophy")} ${esc(r.feedback)}</div>`; }
+            else { sfx.bad(); out.innerHTML = `<div class="feedback bad">${I("x")} قربت! ${esc(r.feedback)} — جرّب تستخدم التلميحات.</div>`; }
+          } catch (err) {
+            // من غير المصحح مش هنحكم على الإجابة (عشان منقولش على إجابة صح إنها غلط)
+            out.innerHTML = `<div class="feedback info">${I("info")} المصحح الذكي مش شغال دلوقتي، فمش هقدر أحكم على إجابتك. قارنها بنفسك بالإجابة النموذجية${LOCAL ? ` (ولتشغيل المصحح: شغّل ملف <b dir="ltr">ai_grader.py</b>)` : " وجرّب تاني بعد دقيقة"}.</div>
+              <div class="model-box"><b>${I("check")} الإجابة النموذجية:</b><div>${esc(t.model || "").replace(/\n/g, "<br>")}</div></div>`;
+          }
+          $v.disabled = false;
         };
       }
 
@@ -1254,6 +1255,223 @@ const QUESTIONS = [
     bindSay();
     renderAfter();
   }
+
+  /* =====================================================================
+     الامتحان النهائي — صفحة مقفولة لوحدها
+     مفيش تصحيح أثناء الحل؛ الإجابات بتتبعت للمصحح الذكي مرة واحدة في الآخر
+     ===================================================================== */
+  function examQ(q, n) {
+    let body = "";
+    if (q.type === "mcq") body = `<div class="options">${shuffle(q.options.map((t, k) => ({ t, k }))).map((o) => `<button class="opt" data-pick="${o.k}">${esc(o.t)}</button>`).join("")}</div>`;
+    else if (q.type === "tf") body = `<div class="tf"><button class="opt" data-pick="1">${I("check")} صح</button><button class="opt" data-pick="0">${I("x")} خطأ</button></div>`;
+    else if (q.type === "fill") body = q.options && q.options.length
+      ? `<div class="options">${shuffle(q.options).map((o) => `<button class="opt" data-pick="${esc(o)}">${esc(o)}</button>`).join("")}</div>`
+      : `<input class="input" data-text placeholder="اكتب الإجابة هنا...">`;
+    else if (q.type === "match") {
+      const right = shuffle(q.pairs.map((p, j) => ({ t: p.b, j })));
+      body = `<div class="ex-match">${q.pairs.map((p, i) => `<label class="ex-mrow"><span>${esc(p.a)}</span>
+        <select class="input" data-m="${i}"><option value="">اختار...</option>${right.map((r) => `<option value="${r.j}">${esc(r.t)}</option>`).join("")}</select></label>`).join("")}</div>`;
+    } else if (q.type === "essay") body = `<textarea class="input answer-area" data-text placeholder="اكتب إجابتك بأسلوبك..."></textarea><small class="ex-wc" data-wc>٠ كلمة</small>`;
+    const qt = q.type === "fill" ? esc(q.q).replace(/_{3,}/, `<span class="blank">.......</span>`) : esc(q.q);
+    return `<div class="card ex-q" data-exq="${q.id}">
+      <div class="ex-top"><span class="ex-num">${ar(n + 1)}</span>${typeTag(q.type)}<span class="tag">${marksWord(marksOf(q))}</span></div>
+      <div class="q-text">${qt}</div>${body}</div>`;
+  }
+
+  function graderOffline(retry) {
+    modal(`<div class="big-ico bad">${I("power")}</div><h3>${LOCAL ? "المصحح الذكي مش شغال" : "المصحح الذكي مش متاح دلوقتي"}</h3>
+      ${LOCAL ? `<p style="color:var(--muted)">عشان إجاباتك تتصحح لازم برنامج المصحح يكون شغال على الجهاز:</p>
+      <ol class="offline-steps">
+        <li>افتح فولدر المنصة.</li>
+        <li>شغّل ملف <b dir="ltr">ai_grader.py</b> (دبل كليك عليه، أو اكتب <b dir="ltr">python ai_grader.py</b>).</li>
+        <li>ارجع هنا واضغط «حاول تاني».</li>
+      </ol>` : `<p style="color:var(--muted)">ممكن يكون المصحح بيصحى بعد فترة من غير استخدام، وده بياخد حوالي دقيقة. استنى شوية واضغط «حاول تاني».</p>`}
+      <p style="color:var(--muted)">إجاباتك لسه موجودة في الصفحة، مش هتضيع.</p>
+      <div class="btn-row" style="justify-content:center"><button class="btn" data-y>${I("refresh")} حاول تاني</button><button class="btn soft" data-n>إلغاء</button></div>`,
+      (m, close) => { m.querySelector("[data-n]").onclick = close; m.querySelector("[data-y]").onclick = () => { close(); retry(); }; });
+  }
+
+  screens.exam = ({ id }) => {
+    const l = lessonById(id);
+    if (examPending(examOf(id))) return go("examStatus", { id }, false);
+    const all = qOf(id);
+    const qs = [...shuffle(all.filter((q) => q.type !== "essay")), ...all.filter((q) => q.type === "essay")];
+    const total = qs.reduce((t, q) => t + marksOf(q), 0), ans = {};
+    render(`
+      <div class="exam-head">
+        <div class="grow"><small>${esc(l.subject.title)} › ${esc(unitShort(l.unit))}</small>
+          <h1>${I("lock")} الامتحان النهائي: ${esc(l.title)}</h1>
+          <p>${qWord(qs.length)} — ${ar(total)} درجة • مفيش تصحيح أثناء الحل، والنتيجة بتوصلك بعد مراجعة المصحح الذكي</p></div>
+        <button class="btn soft small" data-exquit>${I("logout")} خروج</button>
+      </div>
+      <div class="exam-list">${qs.map(examQ).join("")}</div>
+      <div class="exam-bar">
+        <div class="grow"><b data-excount></b><div class="progress"><span data-exprog style="width:0"></span></div></div>
+        <button class="btn" data-exsend>${I("send")} إرسال الإجابات</button>
+      </div>`);
+    window.onbeforeunload = (e) => { e.preventDefault(); e.returnValue = ""; };
+    const answered = (q) => {
+      const v = ans[q.id];
+      if (v === undefined || v === null) return false;
+      if (q.type === "match") return Object.keys(v).length === q.pairs.length;
+      return typeof v === "string" ? v.trim().length > 0 : true;
+    };
+    const count = () => {
+      const d = qs.filter(answered).length;
+      $("[data-excount]").textContent = `أجبت على ${ar(d)} من ${ar(qs.length)}`;
+      $("[data-exprog]").style.width = pct(d, qs.length) + "%";
+      return d;
+    };
+    $$("[data-exq]").forEach((box) => {
+      const q = qs.find((x) => x.id === box.dataset.exq);
+      const mark = () => { box.classList.toggle("done", answered(q)); count(); };
+      $$("[data-pick]", box).forEach((b) => (b.onclick = () => {
+        sfx.click();
+        $$("[data-pick]", box).forEach((x) => x.classList.toggle("picked", x === b));
+        const v = b.dataset.pick;
+        ans[q.id] = q.type === "mcq" ? +v : q.type === "tf" ? v === "1" : v;
+        mark();
+      }));
+      const t = $("[data-text]", box);
+      if (t) t.oninput = () => {
+        ans[q.id] = t.value;
+        if (q.type === "essay") $("[data-wc]", box).textContent = `${ar(t.value.trim() ? t.value.trim().split(/\s+/).length : 0)} كلمة`;
+        mark();
+      };
+      $$("[data-m]", box).forEach((sl) => (sl.onchange = () => {
+        const m = ans[q.id] || {};
+        if (sl.value === "") delete m[sl.dataset.m]; else m[sl.dataset.m] = sl.value;
+        ans[q.id] = m; mark();
+      }));
+    });
+    count();
+    $("[data-exquit]").onclick = () => confirmBox("عايز تخرج من الامتحان؟", "إجاباتك مش هتتحفظ، وتقدر تبدأ الامتحان من جديد في أي وقت.", "أيوه، اخرج", () => go("lesson", { id }, false));
+    const $send = $("[data-exsend]");
+    const doSend = async () => {
+      $send.disabled = true; $send.innerHTML = `${I("send")} بيتبعت...`;
+      try {
+        const r = await api("submit", { lesson: id, user: session || "", answers: qs.map((q) => ({ id: q.id, value: answered(q) ? ans[q.id] : null })) });
+        const prev = examOf(id) || {};
+        setExam(id, { sid: r.id, status: "queued", at: Date.now(), ever: !!prev.ever });
+        sfx.ok(); go("examStatus", { id }, false);
+      } catch (err) {
+        $send.disabled = false; $send.innerHTML = `${I("send")} إرسال الإجابات`;
+        err.server ? toast(err.message) : graderOffline(doSend);
+      }
+    };
+    $send.onclick = () => {
+      sfx.click();
+      const miss = qs.length - count();
+      if (miss) confirmBox("لسه في أسئلة مجاوبتش عليها", `فاضل ${qWord(miss)} من غير إجابة، وهيتحسبوا صفر. تبعت إجاباتك برضه؟`, "أيوه، ابعت", doSend);
+      else confirmBox("تبعت إجاباتك؟", "بعد الإرسال مش هتقدر تغيّر إجاباتك، والمصحح الذكي هيبدأ يراجعها.", "أيوه، ابعت", doSend);
+    };
+  };
+
+  /* ---------- نتيجة الامتحان: بتستنى المصحح لحد ما يخلص ---------- */
+  const STATE = { correct: ["ok", "صح"], partial: ["part", "درجة جزئية"], wrong: ["bad", "غلط"], empty: ["bad", "لم تُجب"] };
+  function reviewItem(it, n) {
+    const [cls, lbl] = STATE[it.state] || STATE.wrong;
+    let body;
+    if (it.type === "essay") body = `
+      <div class="rv-ans"><small>إجابتك:</small><div>${esc(it.given).replace(/\n/g, "<br>")}</div></div>
+      <div class="rv-fb">${I("brain")}<span><b>ملاحظة المصحح:</b> ${esc(it.feedback)}</span></div>
+      ${it.review ? `<div class="rv-review">${I("eye")}<span><b>محتاج مراجعة المعلم:</b> ${esc(it.review)}</span></div>` : ""}
+      ${(it.found || []).length || (it.missing || []).length || (it.partial || []).length ? `<ul class="rv-points">${(it.found || []).map((p) => `<li class="ok">${I("check")}<span>${esc(p)}</span><small>موجودة</small></li>`).join("")}${(it.partial || []).map((p) => `<li class="part">${I("info")}<span>${esc(p)}</span><small>موجودة جزئيًا</small></li>`).join("")}${(it.missing || []).map((p) => `<li class="bad">${I("x")}<span>${esc(p)}</span><small>ناقصة</small></li>`).join("")}</ul>` : ""}
+      <div class="model-box"><b>${I("check")} الإجابة النموذجية:</b><div>${esc(it.model)}</div></div>
+      <details class="rv-think"><summary>${I("sparkle")} إزاي المصحح فكّر؟</summary>
+        <ol>${(it.thoughts || []).map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
+        <small>ثقة المصحح في الدرجة: ${esc(it.confidence || "")}</small></details>`;
+    else body = `<small>إجابتك: <b>${esc(it.given)}</b>${it.state === "correct" ? "" : ` — الصح: <b>${esc(it.correct_text)}</b>`}</small>
+      ${it.explain ? `<small>${I("bulb")} ${esc(it.explain)}</small>` : ""}`;
+    return `<div class="rv ${cls}">
+      <div class="rv-head"><span>${ar(n + 1)}. ${TYPES[it.type] || ""}</span><span class="tag rv-${cls}">${lbl} — ${num(it.score)} من ${num(it.marks)}</span></div>
+      <div class="rv-q">${esc(it.q)}</div>${body}</div>`;
+  }
+
+  screens.examStatus = ({ id }) => {
+    const l = lessonById(id), idx = LESSONS.indexOf(l), nextL = LESSONS[idx + 1];
+    render(`
+      ${crumbs([{ t: l.subject.title, go: ["subject", { id: l.subject.id }] }, { t: l.title, go: ["lesson", { id }] }, { t: "نتيجة الامتحان" }])}
+      ${title("sparkle", "نتيجة الامتحان النهائي")}
+      <p class="page-sub">${esc(l.title)}</p>
+      <div data-exout></div><div data-closing></div>`);
+    bindCrumbs();
+    const out = $("[data-exout]"), e0 = examOf(id);
+    const again = () => { sfx.click(); go("exam", { id }); };
+    if (!e0 || !e0.sid) {
+      out.innerHTML = `<div class="card empty-state"><span class="ico">${I("pencil")}</span><h3>لسه ما امتحنتش الدرس ده</h3>
+        <button class="btn" data-again>${I("play")} ابدأ الامتحان</button></div>`;
+      $("[data-again]").onclick = again; return;
+    }
+    const showResult = (res, fresh) => {
+      const p = res.percent, e = examOf(id) || {};
+      if (fresh) p >= PASS ? sfx.win() : sfx.bad();
+      out.innerHTML = `
+        <div class="card result">
+          <div class="big-ico ${res.passed ? "ok" : "bad"}">${I(p === 100 ? "trophy" : res.passed ? "star" : "trend")}</div>
+          <div class="score">${num(res.score)} / ${num(res.total)}</div>
+          <p><b>${ar(p)}٪</b> — ${res.passed ? (p >= 85 ? "ممتاز جدًا! لقد فعلتها!" : "ناجح — خطوة ممتازة!") : "محتاج ٥٠٪ عشان تنجح — راجع الدرس وجرّب تاني"}</p>
+          <p class="reviewer">${I("brain")} صحّحه: ${esc(res.reviewer || "المصحح الذكي")}</p>
+          ${(() => { const n = res.items.filter((x) => x.review).length; return n ? `<p class="review-note">${I("eye")} ${n === 1 ? "في إجابة مقالية محتاجة" : n === 2 ? "في إجابتين مقاليتين محتاجين" : `في ${ar(n)} إجابات مقالية محتاجة`} مراجعة المعلم — درجتها مبدئية، وتفاصيلها تحت.</p>` : ""; })()}
+          <div class="btn-row" style="justify-content:center">
+            <button class="btn soft" data-back>${I("back")} رجوع للدرس</button>
+            <button class="btn ${res.passed ? "soft" : ""}" data-again>${I("refresh")} امتحن تاني</button>
+            ${res.passed && nextL ? `<button class="btn" data-nextl>الدرس التالي ${I("next")}</button>` : ""}
+          </div>
+        </div>
+        <div class="section-label">${I("list")} مراجعة الإجابات</div>
+        <div class="review">${res.items.map(reviewItem).join("")}</div>`;
+      $("[data-back]").onclick = () => { sfx.click(); go("lesson", { id }); };
+      $("[data-again]").onclick = again;
+      const nb = $("[data-nextl]"); if (nb) nb.onclick = () => { sfx.click(); go("lesson", { id: nextL.id }); };
+      if (e.ever && (l.closing || l.download)) {
+        const ch = $("[data-closing]"); ch.innerHTML = closingCard(l);
+        if (l.download) bindDownload($("[data-dl]", ch), l.download);
+      }
+    };
+    if (e0.status === "done" && e0.result) return showResult(e0.result, false);
+
+    out.innerHTML = `<div class="card status-card">
+      <div class="grader-anim">${I("brain")}<span class="dots"><i></i><i></i><i></i></span></div>
+      <h3 data-st-title>بنتواصل مع المصحح الذكي...</h3><p data-st-sub></p>
+      <div class="progress"><span data-st-bar style="width:0"></span></div>
+      <small>تقدر تسيب الصفحة دي وترجع بعدين — النتيجة هتفضل محفوظة.</small></div>`;
+    const setS = (t, sub, w) => { $("[data-st-title]").textContent = t; $("[data-st-sub]").textContent = sub; if (w !== undefined) $("[data-st-bar]").style.width = w + "%"; };
+    let busy = false;
+    const tick = async () => {
+      if (busy || current.name !== "examStatus") return; busy = true;
+      try {
+        const r = await api("result/" + e0.sid);
+        if (current.name !== "examStatus" || current.params.id !== id) return;
+        if (r.status === "done" && r.result) {
+          clearTimers();
+          const res = r.result;
+          const prev = examOf(id) || {};
+          setExam(id, { sid: e0.sid, status: "done", at: prev.at, score: res.score, total: res.total, percent: res.percent,
+            passed: res.passed, ever: !!prev.ever || res.passed, result: res });
+          if (res.passed) saveLesson(id, res.score, res.total);
+          showResult(res, true);
+        } else if (r.status === "error") {
+          clearTimers(); setExam(id, Object.assign({}, examOf(id), { status: "error" }));
+          out.innerHTML = `<div class="card empty-state"><span class="ico">${I("alert")}</span><h3>حصلت مشكلة أثناء التصحيح</h3><p>ابعت الامتحان تاني.</p><button class="btn" data-again>${I("refresh")} امتحن تاني</button></div>`;
+          $("[data-again]").onclick = again;
+        } else {
+          const pr = r.progress || { done: 0, total: 1 };
+          setExam(id, Object.assign({}, examOf(id), { status: r.status }));
+          if (r.status === "queued") setS("امتحانك في الطابور", r.ahead ? `قدامك ${ar(r.ahead)} امتحان — المصحح هيوصلك حالًا.` : "المصحح هيبدأ فيه حالًا.", 3);
+          else setS(`المصحح بيراجع السؤال ${ar(Math.min(pr.done + 1, pr.total))} من ${ar(pr.total)}`,
+            pr.current === "essay" ? "بيقرأ إجابتك المقالية ويقارنها بأفكار الدرس..." : "بيراجع إجاباتك واحدة واحدة...", Math.max(3, pct(pr.done, pr.total)));
+        }
+      } catch (err) {
+        if (err.server) {
+          clearTimers(); setExam(id, Object.assign({}, examOf(id), { status: "error" }));
+          out.innerHTML = `<div class="card empty-state"><span class="ico">${I("alert")}</span><h3>الامتحان ده مش موجود عند المصحح</h3><p>ممكن يكون ملف النتائج اتمسح. ابعت الامتحان تاني.</p><button class="btn" data-again>${I("refresh")} امتحن تاني</button></div>`;
+          $("[data-again]").onclick = again;
+        } else setS("مستني المصحح الذكي يشتغل", LOCAL ? "شغّل ملف ai_grader.py، وأول ما يشتغل التصحيح هيكمل لوحده." : "المصحح بيصحى دلوقتي — التصحيح هيكمل لوحده خلال دقيقة.");
+      } finally { busy = false; }
+    };
+    tick(); timers.push(setInterval(tick, 2500));
+  };
 
   /* ---------- الوداع والخروج ---------- */
   screens.bye = () => {

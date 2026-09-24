@@ -97,6 +97,9 @@
 
   <main id="app"></main>
 
+  <!-- المصحح الذكي (Python): المتصفح بيحمّله ويشغّله بـ Pyodide من غير سيرفر.
+       لما المنصة تتفتح كملف من الجهاز بيتحمّل كده، وعلى النت script.js بيجيبه بـ fetch -->
+  <script>if (location.protocol === "file:") { var s = document.createElement("script"); s.src = "ai_grader.py"; document.head.appendChild(s); }</script>
   <script src="script.js"></script>
 </body>
 </html>

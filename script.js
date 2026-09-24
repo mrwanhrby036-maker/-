@@ -703,6 +703,8 @@ const QUESTIONS = [
   /* ---------------- البيانات ---------------- */
   const TYPES = { mcq: "اختيار من متعدد", tf: "صح أم خطأ", fill: "أكمل", match: "توصيل", essay: "سؤال مقالي" };
   const LEVELS = { 1: "سهل", 2: "متوسط", 3: "صعب" };
+  // نسخة من المنهج زي ما هو (قبل الربط اللي تحت) — دي اللي المصحح الذكي بيتعلم منها
+  const CURRICULUM_JSON = JSON.stringify(SUBJECTS);
   // كل درس بيعرف هو في أنهي قسم وأنهي وحدة
   const LESSONS = SUBJECTS.flatMap((s) => s.units.flatMap((u, ui) => { u.subject = s; u.unum = ui + 1;
     return u.lessons.map((l, i) => Object.assign(l, { subject: s, unit: u, num: i + 1, unum: ui + 1, parts: l.parts || [] })); }));
@@ -737,19 +739,170 @@ const QUESTIONS = [
   /* ---------------- الامتحان النهائي + المصحح الذكي ----------------
      المصحح الذكي برنامج Python (ملف ai_grader.py) بيشتغل على نفس الجهاز:
      المنصة بتبعتله الإجابات، وهو بيراجعها سؤال سؤال ويرجّع النتيجة */
-  // لينك المصحح الذكي: لو المنصة والمصحح على نفس الموقع (Render أو الجهاز) سيبه فاضي.
-  // لو المنصة على GitHub Pages والمصحح على Render، اكتب لينك Render هنا، مثال: "https://my-platform.onrender.com"
+  /* =====================================================================
+     المصحح الذكي (ai_grader.py) — شغال جوه المتصفح نفسه بـ Pyodide (Python جوه المتصفح)
+     - ملف ai_grader.py بيتحمّل من index.html، وبيشتغل في الخلفية (Web Worker) عشان الصفحة ما تهنّجش
+     - أول مرة بيتعلم المنهج ويحفظ الشبكة في المتصفح، وبعد كده بيفتح على طول
+     - لو مفيش نت يحمّل Pyodide، بيجرب السيرفر (python ai_grader.py) لو شغال
+     ===================================================================== */
+  const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
+  // لو حبيت تشغّل المصحح على سيرفر (Render مثلًا) بدل المتصفح، اكتب لينكه هنا كبديل
   const GRADER_URL = "";
   const API = GRADER_URL ? GRADER_URL.replace(/\/$/, "") + "/api/" : location.protocol.startsWith("http") ? "api/" : "http://localhost:8765/api/";
   const LOCAL = location.protocol === "file:" || /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname);
-  async function api(path, body) {
+  // Worker عادي (عشان يشتغل كمان لما index.html يتفتح كملف من الجهاز)، وPyodide بيتحمّل جواه بـ import()
+  const WORKER_SRC = `
+    let py = null;
+    self.importScripts = function () { throw new Error("module-style worker"); };
+    self.onmessage = async (e) => {
+      const { id, cmd, args } = e.data;
+      try {
+        if (cmd === "init") {
+          const { loadPyodide } = await import(args.url + "pyodide.mjs");
+          py = await loadPyodide({ indexURL: args.url, stdout: (t) => self.postMessage({ log: t }) });
+          py.globals.set("__browser_src__", args.full);
+          py.runPython(args.code);
+          self.postMessage({ id, ok: true, value: py.globals.get("browser_start")(args.data, args.model || "") });
+        } else self.postMessage({ id, ok: true, value: py.globals.get(cmd)(...args) });
+      } catch (err) { self.postMessage({ id, ok: false, error: String((err && err.message) || err) }); }
+    };`;
+  const AI = { worker: null, ready: null, seq: 0, wait: {}, last: "", running: {}, failedAt: 0 };
+  const aiSend = (cmd, args) => new Promise((res, rej) => {
+    const id = ++AI.seq; AI.wait[id] = { res, rej }; AI.worker.postMessage({ id, cmd, args });
+  });
+  function aiReady() {
+    if (AI.ready) return AI.ready;
+    AI.ready = (async () => {
+      let full = window.AI_GRADER_SRC;
+      if (!full) full = await (await fetch("ai_grader.py", { cache: "no-store" })).text();
+      const a = full.indexOf("# ==PY-START=="), b = full.lastIndexOf("# ==PY-END==");
+      if (a < 0 || b < a) throw new Error("ملف المصحح مش كامل");
+      let model = "";
+      try { model = localStorage.getItem("mp_ai_model") || ""; } catch (e) {}
+      if (!model && location.protocol.startsWith("http")) {
+        try { const r = await fetch("ai_model.json"); if (r.ok) model = await r.text(); } catch (e) {}
+      }
+      const w = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: "text/javascript" })));
+      w.onmessage = (e) => {
+        const m = e.data;
+        if (m.log !== undefined) { AI.last = String(m.log).trim(); return; }
+        const pr = AI.wait[m.id]; if (!pr) return;
+        delete AI.wait[m.id]; m.ok ? pr.res(m.value) : pr.rej(new Error(m.error));
+      };
+      w.onerror = () => { Object.values(AI.wait).forEach((pr) => pr.rej(new Error("worker"))); AI.wait = {}; };
+      AI.worker = w;
+      const init = aiSend("init", { url: PYODIDE_URL, full, code: full.slice(a, b), model,
+        data: `{"subjects":${CURRICULUM_JSON},"questions":${JSON.stringify(QUESTIONS)},"site":${JSON.stringify(SITE.name)}}` });
+      const r = JSON.parse(await Promise.race([init, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 120000))]));
+      if (r.trained && r.model) { try { localStorage.setItem("mp_ai_model", JSON.stringify(r.model)); } catch (e) {} }
+      return true;
+    })();
+    AI.ready.catch((e) => { console.info("المصحح الذكي مااتحمّلش:", String((e && e.message) || e).slice(-300)); AI.ready = null; AI.failedAt = Date.now(); if (AI.worker) AI.worker.terminate(); AI.worker = null; });
+    return AI.ready;
+  }
+  const aiWarm = () => { if (!AI.ready && Date.now() - AI.failedAt > 30000) aiReady().catch(() => {}); };
+
+  // البديل: المصحح على سيرفر (python ai_grader.py على الجهاز، أو GRADER_URL)
+  async function remoteApi(path, body) {
     const r = await fetch(API + path, body
       ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
       : { cache: "no-store" });
-    let j = {}; try { j = await r.json(); } catch (e) {}
-    if (!r.ok) { const err = new Error(j.error || "حصل خطأ عند المصحح"); err.server = true; throw err; }
+    let j = {}; try { j = (await r.json()) || {}; } catch (e) {}
+    if (!r.ok) {
+      // رد من المصحح نفسه (فيه رسالة) = خطأ حقيقي. غير كده (صفحة خطأ أو السيرفر نايم) = المصحح مش متاح
+      const err = new Error(j.error || "المصحح الذكي مش متاح دلوقتي");
+      err.server = !!j.error; throw err;
+    }
+    if (!Object.keys(j).length) { const err = new Error("المصحح الذكي مش متاح دلوقتي"); err.server = false; throw err; }
     return j;
   }
+
+  // مكتب المراجعة جوه المتصفح: نفس فكرة الطابور اللي في ai_grader.py
+  const subs = () => store.get("aisubs", {});
+  const setSub = (sid, patch) => {
+    const all = subs(); if (!all[sid]) return;
+    Object.assign(all[sid], patch);
+    const ids = Object.keys(all).sort((x, y) => all[y].created - all[x].created);
+    ids.slice(6).forEach((k) => delete all[k]); // بنحتفظ بآخر ٦ امتحانات بس
+    store.set("aisubs", all);
+  };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function runReview(sid) {
+    if (AI.running[sid]) return;
+    AI.running[sid] = true;
+    const owner = session;
+    try {
+      let s = subs()[sid];
+      if (!s) return;
+      setSub(sid, { status: "queued", phase: "loading" });
+      let local = true;
+      try { await aiReady(); } catch (e) { local = false; }
+      if (session !== owner) return;
+      if (!local) { // مفيش نت لـ Pyodide: نجرب السيرفر
+        try {
+          const r = await remoteApi("submit", { lesson: s.lesson, user: owner || "", answers: s.answers });
+          setSub(sid, { remote: r.id, phase: "" }); return;
+        } catch (e) { setSub(sid, { phase: "offline", retryAt: Date.now() + 15000 }); return; }
+      }
+      setSub(sid, { status: "reviewing", phase: "" });
+      const items = []; let got = 0, total = 0;
+      for (let n = 0; n < s.answers.length; n++) {
+        const a = s.answers[n], q = QUESTIONS.find((x) => x.id === a.id);
+        await sleep(q && q.type === "essay" ? 1400 : 350); // المصحح بياخد وقته في المراجعة
+        const it = JSON.parse(await aiSend("browser_grade", [a.id, JSON.stringify(a.value)]));
+        if (it.error) continue;
+        items.push(it); got += it.score; total += it.marks;
+        if (session !== owner) return;
+        setSub(sid, { progress: { done: n + 1, total: s.answers.length, current: it.type } });
+      }
+      const percent = total ? Math.round((got / total) * 100) : 0;
+      setSub(sid, { status: "done", result: { score: got, total, percent, passed: percent >= PASS, items,
+        reviewed: Date.now() / 1000, reviewer: "المصحح الذكي 1.0 (Python جوه المتصفح)" } });
+    } catch (e) {
+      if (session === owner) setSub(sid, { status: "error", error: String(e.message || e) });
+    } finally { delete AI.running[sid]; }
+  }
+  async function localApi(path, body) {
+    if (path === "check") {
+      try { await aiReady(); } catch (e) { return remoteApi(path, body); }
+      return JSON.parse(await aiSend("browser_check", [body.lesson, body.part, String(body.text || "")]));
+    }
+    if (path === "submit") {
+      const answers = (body.answers || []).filter((a) => QUESTIONS.some((q) => q.id === a.id && q.lesson === body.lesson));
+      if (!answers.length) { const err = new Error("مفيش إجابات"); err.server = true; throw err; }
+      const sid = "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const all = subs();
+      all[sid] = { id: sid, lesson: body.lesson, created: Date.now(), status: "queued", answers, progress: { done: 0, total: answers.length } };
+      store.set("aisubs", all);
+      runReview(sid);
+      return { id: sid, status: "queued" };
+    }
+    if (path.startsWith("result/")) {
+      const sid = path.slice(7), s = subs()[sid];
+      if (!s) {
+        if (!sid.startsWith("b")) return remoteApi(path); // امتحان قديم اتبعت للسيرفر
+        const err = new Error("الامتحان ده مش موجود"); err.server = true; throw err;
+      }
+      if (s.remote) { // اتصحح على السيرفر
+        const r = await remoteApi("result/" + s.remote);
+        if (r.status === "done") setSub(sid, { status: "done", result: r.result });
+        return r;
+      }
+      if ((s.status === "queued" || s.status === "reviewing") && !AI.running[sid] && (!s.retryAt || Date.now() >= s.retryAt)) runReview(sid);
+      const out = { id: sid, status: s.status, progress: s.progress, result: s.result };
+      if (s.status === "queued" && s.phase === "loading") {
+        const m = /(\d+)\/(\d+)/.exec(AI.last || "");
+        out.noteTitle = "المصحح الذكي بيجهز";
+        out.note = m ? `بيتعلم المنهج (دورة ${ar(+m[1])} من ${ar(+m[2])}) — ده بيحصل أول مرة بس.` : "بيشغّل Python جوه المتصفح — أول مرة بتاخد شوية وقت.";
+      } else if (s.status === "queued" && s.phase === "offline") {
+        out.noteTitle = "مستني المصحح الذكي";
+        out.note = "المصحح محتاج إنترنت أول مرة عشان يتحمّل. أول ما النت يرجع، التصحيح هيكمل لوحده.";
+      }
+      return out;
+    }
+    return remoteApi(path, body);
+  }
+  const api = (path, body) => localApi(path, body);
   const exams = () => store.get("exam", {});
   const examOf = (lid) => exams()[lid] || null;
   const setExam = (lid, v) => { const e = exams(); e[lid] = v; store.set("exam", e); };
@@ -1061,6 +1214,7 @@ const QUESTIONS = [
      الجزء اللي بعده بيظهر لوحده أول ما تجاوب أسئلة التحقق صح
      ===================================================================== */
   screens.lesson = ({ id }) => {
+    setTimeout(aiWarm, 2500); // المصحح بيتجهز في الخلفية عشان «تحقق من إجابتك» والامتحان يبقوا أسرع
     const l = lessonById(id), idx = LESSONS.indexOf(l), n = l.parts.length;
     const prevL = LESSONS[idx - 1], nextL = LESSONS[idx + 1];
     store.set("last", id);
@@ -1212,7 +1366,7 @@ const QUESTIONS = [
             else { sfx.bad(); out.innerHTML = `<div class="feedback bad">${I("x")} قربت! ${esc(r.feedback)} — جرّب تستخدم التلميحات.</div>`; }
           } catch (err) {
             // من غير المصحح مش هنحكم على الإجابة (عشان منقولش على إجابة صح إنها غلط)
-            out.innerHTML = `<div class="feedback info">${I("info")} المصحح الذكي مش شغال دلوقتي، فمش هقدر أحكم على إجابتك. قارنها بنفسك بالإجابة النموذجية${LOCAL ? ` (ولتشغيل المصحح: شغّل ملف <b dir="ltr">ai_grader.py</b>)` : " وجرّب تاني بعد دقيقة"}.</div>
+            out.innerHTML = `<div class="feedback info">${I("info")} المصحح الذكي مش متاح دلوقتي (محتاج إنترنت أول مرة عشان يتحمّل)، فمش هقدر أحكم على إجابتك. قارنها بنفسك بالإجابة النموذجية وجرّب تاني بعد شوية.</div>
               <div class="model-box"><b>${I("check")} الإجابة النموذجية:</b><div>${esc(t.model || "").replace(/\n/g, "<br>")}</div></div>`;
           }
           $v.disabled = false;
@@ -1292,6 +1446,7 @@ const QUESTIONS = [
   }
 
   screens.exam = ({ id }) => {
+    aiWarm();
     const l = lessonById(id);
     if (examPending(examOf(id))) return go("examStatus", { id }, false);
     const all = qOf(id);
@@ -1458,7 +1613,8 @@ const QUESTIONS = [
         } else {
           const pr = r.progress || { done: 0, total: 1 };
           setExam(id, Object.assign({}, examOf(id), { status: r.status }));
-          if (r.status === "queued") setS("امتحانك في الطابور", r.ahead ? `قدامك ${ar(r.ahead)} امتحان — المصحح هيوصلك حالًا.` : "المصحح هيبدأ فيه حالًا.", 3);
+          if (r.note) setS(r.noteTitle, r.note, 3);
+          else if (r.status === "queued") setS("امتحانك في الطابور", r.ahead ? `قدامك ${ar(r.ahead)} امتحان — المصحح هيوصلك حالًا.` : "المصحح هيبدأ فيه حالًا.", 3);
           else setS(`المصحح بيراجع السؤال ${ar(Math.min(pr.done + 1, pr.total))} من ${ar(pr.total)}`,
             pr.current === "essay" ? "بيقرأ إجابتك المقالية ويقارنها بأفكار الدرس..." : "بيراجع إجاباتك واحدة واحدة...", Math.max(3, pct(pr.done, pr.total)));
         }
@@ -1467,7 +1623,7 @@ const QUESTIONS = [
           clearTimers(); setExam(id, Object.assign({}, examOf(id), { status: "error" }));
           out.innerHTML = `<div class="card empty-state"><span class="ico">${I("alert")}</span><h3>الامتحان ده مش موجود عند المصحح</h3><p>ممكن يكون ملف النتائج اتمسح. ابعت الامتحان تاني.</p><button class="btn" data-again>${I("refresh")} امتحن تاني</button></div>`;
           $("[data-again]").onclick = again;
-        } else setS("مستني المصحح الذكي يشتغل", LOCAL ? "شغّل ملف ai_grader.py، وأول ما يشتغل التصحيح هيكمل لوحده." : "المصحح بيصحى دلوقتي — التصحيح هيكمل لوحده خلال دقيقة.");
+        } else setS("مستني المصحح الذكي", "المصحح مش متاح دلوقتي — التصحيح هيكمل لوحده أول ما يرجع.");
       } finally { busy = false; }
     };
     tick(); timers.push(setInterval(tick, 2500));

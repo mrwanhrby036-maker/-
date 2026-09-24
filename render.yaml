@@ -1,0 +1,9 @@
+# إعدادات النشر على Render (اختياري) — بيشغّل المصحح الذكي وهو بيعرض المنصة كلها من لينك واحد
+services:
+  - type: web
+    name: masry-platform
+    runtime: python
+    plan: free
+    buildCommand: python --version
+    startCommand: python ai_grader.py --no-browser
+    healthCheckPath: /api/ping

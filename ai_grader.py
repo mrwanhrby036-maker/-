@@ -1,3 +1,9 @@
+1 // 1; r"""
+window.AI_GRADER_SRC = (function () {/*
+"""
+# ==PY-START==
+# السطور اللي فوق دي بتخلي المتصفح يقدر يحمّل الملف ده ويشغّله بـ Pyodide (Python جوه المتصفح)،
+# ومن غير ما تأثر على Python العادي. (متكتبش علامة نجمة وبعدها شرطة مايلة في أي حتة في الملف)
 # -*- coding: utf-8 -*-
 """
 =====================================================================
@@ -37,8 +43,13 @@ import sys
 import threading
 import time
 import uuid
-import webbrowser
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+BROWSER = sys.platform == "emscripten"  # شغال جوه المتصفح (Pyodide)
+if not BROWSER:
+    import webbrowser
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+else:
+    SimpleHTTPRequestHandler, ThreadingHTTPServer = object, None
 
 try:  # عشان العربي يظهر صح في شاشة الأوامر على ويندوز
     sys.stdout.reconfigure(encoding="utf-8")
@@ -49,7 +60,7 @@ except Exception:
 # ---------------------------------------------------------------------
 # الإعدادات
 # ---------------------------------------------------------------------
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.abspath(globals().get("__file__", "ai_grader.py")))  # جوه المتصفح مفيش ملف
 SCRIPT_JS = os.path.join(HERE, "script.js")
 MODEL_FILE = os.path.join(HERE, "ai_model.json")
 RESULTS_FILE = os.path.join(HERE, "ai_results.json")
@@ -103,8 +114,8 @@ class JSLiteralParser:
             elif s.startswith("//", self.i):
                 j = s.find("\n", self.i)
                 self.i = self.n if j < 0 else j + 1
-            elif s.startswith("/*", self.i):
-                j = s.find("*/", self.i + 2)
+            elif s.startswith("/" + "*", self.i):
+                j = s.find("*" + "/", self.i + 2)
                 self.i = self.n if j < 0 else j + 2
             else:
                 break
@@ -210,8 +221,29 @@ def read_platform(path=SCRIPT_JS):
         return JSLiteralParser(src, src.index("[", k)).value()
 
     m = re.search(r'const SITE\s*=\s*\{[^}]*?name:\s*"([^"]+)"', src, re.S)
-    digest = hashlib.sha1(src.encode("utf-8")).hexdigest()[:16]
-    return grab("SUBJECTS"), grab("QUESTIONS"), (m.group(1) if m else "المنصة"), digest
+    subjects, questions = grab("SUBJECTS"), grab("QUESTIONS")
+    return subjects, questions, (m.group(1) if m else "المنصة"), data_digest(subjects, questions)
+
+
+def data_digest(subjects, questions):
+    raw = json.dumps([subjects, questions], ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+
+
+PY_MARKS = ("# ==PY-" + "START==", "# ==PY-" + "END==")
+
+
+def code_digest():
+    """بصمة كود المصحح نفسه (لو الكود اتغير، الشبكة بتتدرب تاني)"""
+    try:
+        with open(os.path.abspath(__file__), encoding="utf-8") as f:
+            src = f.read()
+    except Exception:
+        src = globals().get("__browser_src__", "")
+    a, b = src.find(PY_MARKS[0]), src.rfind(PY_MARKS[1])
+    if a >= 0 and b > a:
+        src = src[a:b]
+    return hashlib.sha1(src.replace("\r\n", "\n").encode("utf-8")).hexdigest()[:10]
 
 
 # =====================================================================
@@ -744,15 +776,24 @@ class Reader:
         for a, n in seq:
             r = ant_of(a)
             sides.append((r[0], 1 - r[1]) if (r and n) else r)  # «مش ضعيف» = قوي
-        for j, r in enumerate(sides):
-            if not r or (r[0], 1 - r[1]) not in P or r in P:
+        if not topic:  # الفكرة كلها كلمة ضد واحدة: أي ضد من غير الناحية الصح يبقى عكس
+            have = set(sides) - {None}
+            return any((i, 1 - sd) not in P and (i, 1 - sd) in have and (i, sd) not in have for i, sd in P)
+        # لكل مكان في كلام الطالب فيه موضوع الفكرة: أقرب كلمة ضد ليه من أنهي ناحية؟
+        # «حكومة مركزية ضعيفة والقوة العسكرية» ← «ضعيفة» هي الأقرب لـ«مركزية» فده عكس الفكرة
+        # «حاول يضعف المصريين لكن الثورة زادت الوعي» ← «زادت» هي الأقرب لـ«الوعي» فمش عكس
+        for k, (a, _) in enumerate(seq):
+            if not any(self.tok_sim(t, a) >= 0.8 for t in topic):
                 continue
-            lo, hi = max(0, j - 3), j + 4
-            if (r[0], 1 - r[1]) in sides[lo:hi]:
-                continue  # نفس الجملة فيها الناحيتين («حاول يضعفه بس الوعي زاد») فمش عكس
-            near = [a for a, _ in seq[lo:hi]]
-            if not topic or any(self.tok_sim(t, a) >= 0.8 for t in topic for a in near):
-                return True
+            for i, sd in P:
+                if (i, 1 - sd) in P:
+                    continue
+                # في العربي الصفة بتيجي بعد الموصوف («جيش ضعيف»)، فالكلمة اللي بعد الموضوع أقرب شوية
+                dist = lambda j: abs(j - k) + (0.5 if j < k else 0)
+                d_bad = min([dist(j) for j, r in enumerate(sides) if r == (i, 1 - sd) and abs(j - k) <= 3] or [99])
+                d_ok = min([dist(j) for j, r in enumerate(sides) if r == (i, sd) and abs(j - k) <= 3] or [99])
+                if d_bad < d_ok:
+                    return True
         return False
 
     def point_score(self, point, ans_toks, ans_set, ans_sents, pos=None, neg=None, seq=None):
@@ -1190,17 +1231,21 @@ class Thinker:
 # تجميع الذكاء: قراءة المنهج ← المعرفة ← تمثيل الكلمات ← الشبكة
 # =====================================================================
 class Grader:
-    def __init__(self, retrain=False):
+    def __init__(self, retrain=False, data=None, cached=None):
         t0 = time.time()
-        subjects, questions, self.site, digest = read_platform()
+        if data is None:
+            subjects, questions, self.site, digest = read_platform()
+        else:  # جوه المتصفح: المنهج جاي من المنصة مباشرة
+            subjects, questions, self.site = data["subjects"], data["questions"], data.get("site", "المنصة")
+            digest = data_digest(subjects, questions)
         self.kb = KnowledgeBase(subjects, questions)
         say("  قريت المنهج: %d درس، %d سؤال، %d جملة، %d كلمة مختلفة."
             % (len(self.kb.lessons), len(self.kb.questions), len(self.kb.sentences), len(self.kb.vocab)))
-        with open(os.path.abspath(__file__), "rb") as f:
-            me = hashlib.sha1(f.read()).hexdigest()[:10]
-        key = "%s-%s-%s" % (VERSION, digest, me)
-        cached = None
-        if not retrain and os.path.exists(MODEL_FILE):
+        key = "%s-%s-%s" % (VERSION, digest, code_digest())
+        if cached is not None:
+            if retrain or not isinstance(cached, dict) or cached.get("key") != key:
+                cached = None
+        elif not retrain and data is None and os.path.exists(MODEL_FILE):
             try:
                 with open(MODEL_FILE, encoding="utf-8") as f:
                     cached = json.load(f)
@@ -1210,10 +1255,11 @@ class Grader:
             except Exception:
                 cached = None
         self.emb = WordEmbeddings(16)
+        self.trained, self.blob = False, None
         if cached:
             self.emb.vec = cached["emb"]
             self.net = NeuralNet.from_dict(cached["net"])
-            say("  حمّلت الشبكة المتدربة من %s" % os.path.basename(MODEL_FILE))
+            say("  حمّلت الشبكة المتدربة.")
         else:
             rng = random.Random(SEED)
             say("  بتعلّم معاني الكلمات من الدروس (Skip-gram)...")
@@ -1228,12 +1274,15 @@ class Grader:
             say("  بدرّب الشبكة العصبية على %d إجابة..." % len(X))
             self.net = NeuralNet(len(FEATURE_NAMES), 10, rng)
             self.net.train(X, Y, rng, log=say)
-            try:
-                with open(MODEL_FILE, "w", encoding="utf-8") as f:
-                    json.dump({"key": key, "emb": {w: [round(x, 5) for x in v] for w, v in self.emb.vec.items()},
-                               "net": self.net.to_dict(), "trained_on": len(X)}, f, ensure_ascii=False)
-            except OSError:
-                pass
+            self.trained = True
+            self.blob = {"key": key, "emb": {w: [round(x, 5) for x in v] for w, v in self.emb.vec.items()},
+                         "net": self.net.to_dict(), "trained_on": len(X)}
+            if data is None:
+                try:
+                    with open(MODEL_FILE, "w", encoding="utf-8") as f:
+                        json.dump(self.blob, f, ensure_ascii=False)
+                except OSError:
+                    pass
         self.thinker = Thinker(self.kb, self.emb, self.net)
         say("  المصحح الذكي جاهز (%.1f ثانية)." % (time.time() - t0))
 
@@ -1325,17 +1374,8 @@ class ReviewDesk:
         items, got, total = [], 0.0, 0.0
         for n, a in enumerate(answers):
             q = kb.questions[a["id"]]
-            essay = q.get("type") == "essay"
-            time.sleep(REVIEW_SECONDS_ESSAY if essay else REVIEW_SECONDS_OBJECTIVE)
-            item = {"id": q["id"], "type": q["type"], "q": q["q"], "explain": q.get("explain", "")}
-            if essay:
-                r = th.grade_essay(q, a["value"] if isinstance(a["value"], str) else "")
-                item.update(r)
-                item["given"] = a["value"] if isinstance(a["value"], str) and a["value"].strip() else "لم تُجب"
-            else:
-                item.update(th.grade_objective(q, a["value"]))
-            item["state"] = "correct" if item["score"] >= item["marks"] else ("partial" if item["score"] > 0 else
-                                                                               ("empty" if item["given"] == "لم تُجب" else "wrong"))
+            time.sleep(REVIEW_SECONDS_ESSAY if q.get("type") == "essay" else REVIEW_SECONDS_OBJECTIVE)
+            item = grade_item(th, q, a["value"])
             got += item["score"]
             total += item["marks"]
             items.append(item)
@@ -1348,6 +1388,50 @@ class ReviewDesk:
             s["status"] = "done"
             self.save()
         say("  خلصت تصحيح امتحان %s: %s من %s (%d٪)" % (sid, got, total, percent))
+
+
+def grade_item(th, q, value):
+    """تصحيح سؤال واحد — بيرجّع كل تفاصيل المراجعة"""
+    item = {"id": q["id"], "type": q["type"], "q": q["q"], "explain": q.get("explain", "")}
+    if q.get("type") == "essay":
+        item.update(th.grade_essay(q, value if isinstance(value, str) else ""))
+        item["given"] = value if isinstance(value, str) and value.strip() else "لم تُجب"
+    else:
+        item.update(th.grade_objective(q, value))
+    item["state"] = "correct" if item["score"] >= item["marks"] else ("partial" if item["score"] > 0 else
+                                                                       ("empty" if item["given"] == "لم تُجب" else "wrong"))
+    return item
+
+
+# =====================================================================
+# المصحح جوه المتصفح (Pyodide): المنصة بتنادي الدوال دي مباشرة من غير سيرفر
+# =====================================================================
+_BR = {}
+
+
+def browser_start(data_json, model_json=""):
+    """بيجهّز المصحح: بياخد المنهج من المنصة، والشبكة المتدربة لو محفوظة في المتصفح"""
+    cached = None
+    if model_json:
+        try:
+            cached = json.loads(model_json)
+        except ValueError:
+            cached = None
+    g = Grader(data=json.loads(data_json), cached=cached)
+    _BR["g"] = g
+    return json.dumps({"ok": True, "trained": g.trained, "model": g.blob}, ensure_ascii=False)
+
+
+def browser_grade(qid, value_json):
+    g = _BR["g"]
+    q = g.kb.questions.get(str(qid))
+    if not q:
+        return json.dumps({"error": "السؤال مش موجود"}, ensure_ascii=False)
+    return json.dumps(grade_item(g.thinker, q, json.loads(value_json)), ensure_ascii=False)
+
+
+def browser_check(lesson, part, text):
+    return json.dumps(_BR["g"].thinker.check_task(str(lesson), int(part), str(text)[:4000]), ensure_ascii=False)
 
 
 # =====================================================================
@@ -1396,7 +1480,7 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         api = self.api_path()
         if api is None:
-            if os.path.basename(self.path.split("?")[0]).startswith("ai_"):
+            if os.path.basename(self.path.split("?")[0]).startswith("ai_results"):
                 return self.send_error(404)
             return super().do_GET()
         if api == "ping":
@@ -1477,7 +1561,7 @@ def main():
         say("\n  تم إيقاف المصحح. مع السلامة!")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and not BROWSER:
     try:
         main()
     except Exception as err:  # عشان لو اتفتح بدبل كليك، النافذة ما تتقفلش قبل ما الخطأ يتقري
@@ -1486,3 +1570,6 @@ if __name__ == "__main__":
             input("  اضغط Enter للخروج...")
         except EOFError:
             pass
+# ==PY-END==
+r"""*/}).toString();
+// """

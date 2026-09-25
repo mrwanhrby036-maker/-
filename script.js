@@ -453,6 +453,31 @@ const SUBJECTS = [
    أسئلة الدرس الأول (التاريخ)
    type : "mcq" | "tf" | "fill" | "match" | "essay" (مقالي)      level: 1 سهل | 2 متوسط | 3 صعب
    ===================================================================== */
+/* =====================================================================
+   رسومات توضيحية للدرس (فولدر img) — كل رسمة بتظهر في الجزء بتاعها بعد الحوار.
+   (منفصلة عن المنهج عشان المصحح الذكي مايتأثرش) — والتعليق من كلام الدرس نفسه
+   ===================================================================== */
+const LESSON_FIGS = {
+  u1l1: {
+    0: [{ src: "https://i.ibb.co/qXS9XhB/01-pillars.jpg", title: "أركان الدولة الأربعة", caption: "الشعب، والحيز الجغرافي، والسلطة، والسيادة — الأركان مترابطة؛ إذا اختل أحدها تأثر كيان الدولة بأكمله." }],
+    1: [
+      { src: "https://i.ibb.co/zVfsgbX8/02-people.jpg", title: "دور الشعب", caption: "دور الشعب لا يقتصر على الوجود العددي، بل يمتد إلى المشاركة الفعالة في بناء الدولة وتنميتها وحمايتها." },
+      { src: "https://i.ibb.co/27593F17/03-revolution1919.jpg", title: "ثورة ١٩١٩م", caption: "رفض فيها الشعب الاحتلال البريطاني، وشاركت فيها مختلف فئات المجتمع في مشهد جسّد وحدة المصريين حول هدف الاستقلال." },
+    ],
+    2: [{ src: "https://i.ibb.co/tP3FwPZb/04-geo-space.jpg", title: "عناصر الحيز الجغرافي", caption: "اليابس، والمياه الإقليمية (١٢ ميلًا بحريًا من خط الأساس للساحل)، والمجال الجوي الذي يعلو اليابس والمياه الإقليمية." }],
+    3: [{ src: "https://i.ibb.co/n8gMPVBr/05-powers.jpg", title: "السلطات الثلاث", caption: "التشريعية (مجلس النواب)، والتنفيذية (رئيس الجمهورية والحكومة)، والقضائية (المحاكم على اختلاف أنواعها ودرجاتها)." }],
+    4: [{ src: "https://i.ibb.co/Xx3GvFWk/06-hyksos.jpg", title: "الحفاظ على السيادة", caption: "من أمثلة سعي مصر إلى استقلال قرارها الوطني: طرد الهكسوس في التاريخ القديم." }],
+    5: [
+      { src: "https://i.ibb.co/RG6XZPjR/08-isthmus.jpg", title: "مصر دولة برزخ", caption: "مصر ملتقى بين إفريقيا وآسيا وأوروبا، وبين البحر المتوسط والبحر الأحمر." },
+      { src: "https://i.ibb.co/W4HhkXHX/07-nile.jpg", title: "النيل أهم مورد طبيعي", caption: "بسببه تحول المصري القديم من «جامع للثمار» إلى «مزارع مستقر»، وتطلب ذلك تنظيم الري وبناء السدود والعمل الجماعي." },
+    ],
+    6: [
+      { src: "https://i.ibb.co/LD3MmDHb/09-mena.jpg", title: "توحيد القطرين", caption: "قيام حكومة مركزية قوية بعد توحيد القطرين على يد الملك مينا (نعرمر) هو الأساس الحقيقي لظهور الدولة المصرية." },
+      { src: "https://i.ibb.co/pBky7d9k/10-mummies-parade.jpg", title: "الحفاظ على الهوية", caption: "موكب المومياوات الملكية: من إجراءات الدولة لحماية التراث الحضاري والاحتفال بالمناسبات الوطنية." },
+    ],
+  },
+};
+
 const QUESTIONS = [
   /* ---------- الدرس الأول: بناء الدولة المصرية واستمرارها عبر التاريخ ---------- */
   { id: "h1", lesson: "u1l1", type: "mcq", level: 1, q: "وحدة سياسية تشغل حيزًا جغرافيًا محددًا، وتضم شعبًا يقيم إقامة دائمة ويخضع لقوانينها، وتديرها سلطة منظمة، وتمارس سيادتها على شئونها الداخلية والخارجية. هذا تعريف ..........", options: ["الدولة", "الحكومة", "السلطة التنفيذية", "الحيز الجغرافي"], answer: 0, explain: "" },
@@ -1278,6 +1303,12 @@ const QUESTIONS = [
     const renderAfter = () => {
       const $after = $("[data-after]", host);
       let html = "";
+      // الرسومات التوضيحية (اضغط على الرسمة تكبر)
+      ((LESSON_FIGS[l.id] || {})[pi] || []).forEach((f, fi) => {
+        html += `<div class="block card"><h3 class="block-title">${I("image")} ${esc(f.title)}</h3>
+          <figure class="lesson-fig"><button class="fig-zoom" data-fig="${fi}" title="اضغط للتكبير"><img src="${esc(f.src)}" alt="${esc(f.title + " — " + f.caption)}" loading="lazy"></button>
+          <figcaption>${esc(f.caption)}</figcaption></figure></div>`;
+      });
       // الأمثلة: نص، أو اقتباس (زي مواد الدستور)، أو جدول — وممكن أكتر من مثال في الجزء
       const exList = part.example ? (Array.isArray(part.example) ? part.example : [part.example]) : [];
       exList.forEach((ex) => {
@@ -1320,6 +1351,12 @@ const QUESTIONS = [
           <div data-cpdone></div>
         </div>`;
       $after.innerHTML = html;
+      $$("[data-fig]", $after).forEach((b) => (b.onclick = () => {
+        const f = LESSON_FIGS[l.id][pi][+b.dataset.fig];
+        const m = modal(`<img src="${esc(f.src)}" alt="${esc(f.title)}"><h3>${esc(f.title)}</h3><p>${esc(f.caption)}</p>
+          <button class="btn soft" data-n>${I("x")} إغلاق</button>`, (m, close) => (m.querySelector("[data-n]").onclick = close));
+        m.firstElementChild.classList.add("fig-modal");
+      }));
 
       // التطبيق العملي
       if (part.task) {

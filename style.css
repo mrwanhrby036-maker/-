@@ -740,7 +740,14 @@ textarea.input{min-height:80px;resize:vertical}
 /* صور الدرس (من كتاب الوزارة) */
 .lesson-fig{margin:0;text-align:center}
 .lesson-fig img{max-width:100%;max-height:460px;border-radius:14px;border:1px solid var(--line);box-shadow:var(--shadow);background:#fff}
-.lesson-fig figcaption{margin-top:8px;color:var(--muted);font-size:.95rem}
+.lesson-fig figcaption{margin-top:10px;color:var(--muted);font-size:.98rem;line-height:1.9}
+.fig-zoom{display:block;margin:0 auto;padding:0;border:0;background:none;cursor:zoom-in;max-width:100%}
+.fig-zoom img{display:block;margin:0 auto;aspect-ratio:auto;transition:transform .25s ease}
+.fig-zoom:hover img{transform:scale(1.015)}
+.modal.fig-modal{max-width:min(1100px,94vw);padding:18px}
+.fig-modal img{display:block;width:100%;max-height:72vh;object-fit:contain;border-radius:14px}
+.fig-modal h3{margin:12px 0 4px}
+.fig-modal p{color:var(--muted);line-height:1.9;margin:0 0 12px}
 
 /* =====================================================================
    الامتحان النهائي (صفحة مقفولة) + نتيجة المصحح الذكي

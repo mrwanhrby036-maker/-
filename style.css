@@ -60,7 +60,36 @@ img,svg{display:block}
 
 /* ---------- الحاوية ---------- */
 main{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
-.screen{animation:fadeUp .45s ease}
+.screen{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ---------- الظهور التدريجي ---------- */
+.rv-hide{opacity:0;animation:none!important}
+.rv-hide.rv-in{animation:rvUp .6s cubic-bezier(.2,.7,.2,1) var(--rv-d,0ms) both!important}
+@keyframes rvUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ---------- سكيلتون لودينج ---------- */
+:root{--sk1:#efe3d4;--sk2:#faf4ec}
+[data-theme="dark"]{--sk1:#3a2e26;--sk2:#4a3c32}
+.sk{display:block;max-width:100%;border-radius:8px;background:linear-gradient(90deg,var(--sk1) 25%,var(--sk2) 45%,var(--sk1) 65%);background-size:300% 100%;animation:skShine 1.2s ease-in-out infinite}
+@keyframes skShine{from{background-position:100% 0}to{background-position:0 0}}
+.sk-screen{animation:fadeIn .2s ease}
+.sk-row{display:flex;align-items:center;gap:12px}
+.sk-card{background:var(--foam);border:1px solid var(--line);border-radius:20px;padding:22px;margin-top:16px;display:grid;gap:12px;box-shadow:var(--shadow)}
+.sk-center{text-align:center;justify-items:center}
+.sk-center .sk:last-child{justify-self:stretch}
+.sk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.sk-grid .sk-card{margin-top:0}
+.sk-msg{display:flex;gap:12px;align-items:flex-end;max-width:80%}
+.sk-msg.me{flex-direction:row-reverse;margin-right:auto}
+.sk-bubble{flex:1;display:grid;gap:9px;background:var(--milk);border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:180px}
+.fig-zoom.sk-img{width:min(100%,690px);aspect-ratio:3/2;border-radius:14px;background:linear-gradient(90deg,var(--sk1) 25%,var(--sk2) 45%,var(--sk1) 65%);background-size:300% 100%;animation:skShine 1.2s ease-in-out infinite;cursor:progress}
+.fig-zoom.sk-img img{opacity:0}
+.fig-zoom img{transition:opacity .45s ease}
+.fig-zoom.fig-off{cursor:default;width:100%}
+.fig-off-note{display:flex;align-items:center;justify-content:center;gap:8px;padding:26px 16px;border:1px dashed var(--latte);border-radius:14px;color:var(--muted);background:var(--milk)}
+.fig-off-note .i{width:20px;height:20px}
+@media (prefers-reduced-motion:reduce){.sk,.fig-zoom.sk-img{animation:none}.rv-hide{opacity:1}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
 h1,h2,h3{color:var(--espresso);line-height:1.5}
@@ -325,7 +354,7 @@ textarea.input{min-height:80px;resize:vertical}
 .msg{display:flex;gap:12px;align-items:flex-end;max-width:88%;animation:fadeUp .35s ease}
 .msg.teacher{align-self:flex-start}
 .msg.student{align-self:flex-end;flex-direction:row-reverse}
-.avatar{width:56px;height:56px;flex:none;filter:drop-shadow(0 3px 6px rgba(91,63,44,.18))}
+.avatar{width:56px;height:56px;flex:none;border-radius:50%;object-fit:cover;background:#ead8c2;border:2px solid var(--foam);box-shadow:0 3px 8px rgba(91,63,44,.2)}
 .bubble{position:relative;background:var(--foam);border:1px solid var(--line);padding:12px 18px;border-radius:20px;font-family:var(--font-content);font-size:1.25rem;line-height:1.95;box-shadow:var(--shadow)}
 .msg.teacher .bubble{border-bottom-right-radius:6px}
 .msg.student .bubble{border-bottom-left-radius:6px;background:#f1e4d3}
@@ -662,6 +691,14 @@ textarea.input{min-height:80px;resize:vertical}
 .empty-state .ico .i{width:38px;height:38px}
 .empty-state h3{margin:6px 0}
 .empty-state p{color:var(--muted);margin:0 0 16px}
+.part-box{margin-bottom:16px}
+.part-head{display:flex;align-items:center;gap:12px}
+.part-head h3{margin:0;font-size:1.2rem;color:var(--espresso)}
+.part-num{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--milk);color:var(--coffee);font-weight:700;font-size:1.15rem;border:1px solid var(--line)}
+.part-box .section-label{margin-top:16px}
+.part-empty{display:flex;align-items:center;gap:8px;margin:12px 0 0;color:var(--muted)}
+.part-empty .i{width:18px;height:18px;flex:none}
+[data-theme="dark"] .part-head h3{color:var(--text)}
 
 /* ===================== كلمة الختام في آخر الدرس ===================== */
 .closing{text-align:center;padding:34px 28px;margin-top:22px;border:1px solid var(--latte);
@@ -791,9 +828,42 @@ body.exam-mode{background:var(--milk)}
 .status-card p{color:var(--muted);min-height:1.6em}
 .status-card .progress{display:block;max-width:420px;margin:16px auto 12px}
 .status-card small{color:var(--muted)}
-.grader-anim{position:relative;display:inline-grid;place-items:center;width:96px;height:96px;border-radius:50%;background:var(--milk);color:var(--coffee)}
-.grader-anim > .i{width:50px;height:50px;animation:pulse 1.6s ease-in-out infinite}
-.grader-anim .dots{position:absolute;bottom:-6px}
+/* ===== روبوت التصحيح (تصميم الطالب) — بألوان المنصة ===== */
+.eva-loader{display:flex;justify-content:center;margin:0 auto 6px}
+.eva-view{
+  --eva-glow:#f1cf9f; --eva-glow-strong:#e0a868; --eva-shell:#fffaf3; --eva-shade:#a88d74;
+  perspective:1000px;width:min(20rem,72vw);aspect-ratio:1;border-radius:50%;
+  display:flex;justify-content:center;align-items:center;overflow:hidden;
+  background:radial-gradient(circle at 50% 40%,#5b3f2c 0%,#3d2a1d 60%,#2b1d14 100%);
+  box-shadow:0 14px 34px rgba(91,63,44,.25),inset 0 0 0 4px rgba(217,194,167,.25);
+}
+.eva{--EVA-ROTATION-DURATION:4s;transform-style:preserve-3d;animation:evaRotateRight var(--EVA-ROTATION-DURATION) linear infinite alternate}
+.eva-head{position:relative;width:6rem;height:4rem;border-radius:48% 53% 45% 55% / 79% 79% 20% 22%;background:linear-gradient(to right,var(--eva-shell) 45%,var(--eva-shade))}
+.eva-eyes{width:4.5rem;height:2.75rem;position:relative;left:50%;top:55%;border-radius:45% 53% 45% 48% / 62% 59% 35% 34%;
+  background-color:#2a1c13;box-shadow:0 0 2px 2px var(--eva-shell),inset 0 0 0 2px #1a110b;transform:translate(-50%,-50%);
+  animation:evaMoveRight var(--EVA-ROTATION-DURATION) linear infinite alternate}
+.eva-eye{width:1.2rem;height:1.5rem;position:absolute;border-radius:50%}
+.eva-eye:first-child{left:12px;top:50%;background:repeating-linear-gradient(65deg,var(--eva-glow) 0px,var(--eva-glow) 1px,#fff 2px);
+  box-shadow:inset 0 0 5px var(--eva-glow-strong),0 0 15px 1px var(--eva-glow-strong);transform:translate(0,-50%) rotate(-65deg)}
+.eva-eye:nth-child(2){right:12px;top:50%;background:repeating-linear-gradient(-65deg,var(--eva-glow) 0px,var(--eva-glow) 1px,#fff 2px);
+  box-shadow:inset 0 0 5px var(--eva-glow-strong),0 0 15px 1px var(--eva-glow-strong);transform:translate(0,-50%) rotate(65deg)}
+.eva-body{width:6rem;height:8rem;position:relative;margin-block-start:.25rem;border-radius:47% 53% 45% 55% / 12% 9% 90% 88%;background:linear-gradient(to right,var(--eva-shell) 35%,var(--eva-shade))}
+.eva-hand{position:absolute;left:-1.5rem;top:.75rem;width:2rem;height:5.5rem;border-radius:40%;background:linear-gradient(to left,var(--eva-shell) 15%,var(--eva-shade));
+  box-shadow:5px 0 5px rgba(0,0,0,.25);transform:rotateY(55deg) rotateZ(10deg)}
+.eva-hand:first-child{animation:evaCompensate var(--EVA-ROTATION-DURATION) linear infinite alternate}
+.eva-hand:nth-child(2){left:92%;background:linear-gradient(to right,var(--eva-shell) 15%,var(--eva-shade));transform:rotateY(55deg) rotateZ(-10deg);
+  animation:evaCompensateRight var(--EVA-ROTATION-DURATION) linear infinite alternate}
+.eva-scan{width:0;height:0;position:absolute;left:60%;top:10%;border-top:180px solid var(--eva-glow);border-left:250px solid transparent;border-right:250px solid transparent;
+  transform-origin:top left;-webkit-mask:linear-gradient(to right,#fff,transparent 35%);mask:linear-gradient(to right,#fff,transparent 35%);
+  animation:evaGlow 2s cubic-bezier(.86,0,.07,1) infinite}
+.eva-scan-origin{position:absolute;width:8px;aspect-ratio:1;border-radius:50%;left:60%;top:10%;background:var(--eva-glow);box-shadow:inset 0 0 5px rgba(0,0,0,.5);
+  animation:evaMoveRight var(--EVA-ROTATION-DURATION) linear infinite}
+@keyframes evaRotateRight{from{transform:rotateY(0deg)}to{transform:rotateY(25deg)}}
+@keyframes evaMoveRight{from{transform:translate(-50%,-50%)}to{transform:translate(-40%,-50%)}}
+@keyframes evaCompensate{from{transform:rotateY(55deg) rotateZ(10deg)}to{transform:rotateY(30deg) rotateZ(10deg)}}
+@keyframes evaCompensateRight{from{transform:rotateY(55deg) rotateZ(-10deg)}to{transform:rotateY(70deg) rotateZ(-10deg)}}
+@keyframes evaGlow{from{opacity:0}20%{opacity:1}45%{transform:rotate(-25deg)}75%{transform:rotate(5deg)}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.eva,.eva *{animation:none!important}.eva-scan{opacity:.6}}
 .dots{display:inline-flex;gap:4px;margin-inline-start:6px;vertical-align:middle}
 .dots i{width:7px;height:7px;border-radius:50%;background:var(--caramel);animation:dotUp 1.2s infinite}
 .dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
@@ -838,3 +908,22 @@ body.exam-mode{background:var(--milk)}
 .rv-think ol,.offline-steps{list-style:arabic-indic}
 .rv-points li.part{background:#f5ead6;color:#9a7336}
 [data-theme=dark] .rv-points li.part{background:rgba(184,138,98,.2);color:var(--caramel)}
+/* القطعة في أسئلة العربي */
+.ex-passage{margin:0 0 14px;font-size:1.12rem}
+.rv-passage{margin:6px 0;background:var(--milk);border:1px solid var(--line);border-radius:12px;padding:8px 14px}
+.rv-passage summary{cursor:pointer;color:var(--coffee);font-weight:700;display:flex;align-items:center;gap:6px}
+.rv-passage summary svg{width:18px;height:18px}
+.rv-passage p{margin:8px 0 0;font-family:var(--font-content);line-height:1.9;color:var(--text)}
+/* كروت الأجزاء (العربي): بتتضغط وتفتح صفحة الجزء */
+.part-card{display:block;width:100%;text-align:right;font:inherit;color:inherit;cursor:pointer;position:relative;transition:transform .2s,box-shadow .2s,border-color .2s}
+.part-card .part-head .tag{margin-inline-start:auto}
+.part-card:not(.empty):hover{transform:translateY(-2px);border-color:var(--caramel);box-shadow:0 10px 26px rgba(91,63,44,.12)}
+.part-card:focus-visible{outline:2px solid var(--caramel);outline-offset:3px}
+.part-card.empty{cursor:default;opacity:.8}
+.part-sub{display:flex;align-items:center;gap:8px;margin:12px 0 0;color:var(--muted);padding-inline-end:36px}
+.part-sub .i{width:18px;height:18px;flex:none;color:var(--coffee)}
+.part-go{position:absolute;left:20px;bottom:22px;color:var(--caramel)}
+.part-go .i{width:20px;height:20px}
+.part-num .i{width:20px;height:20px}
+.lesson-row.soon{opacity:.7;cursor:default}
+.lesson-row.soon:hover{transform:none;box-shadow:none;border-color:var(--line)}

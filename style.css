@@ -927,3 +927,14 @@ body.exam-mode{background:var(--milk)}
 .part-num .i{width:20px;height:20px}
 .lesson-row.soon{opacity:.7;cursor:default}
 .lesson-row.soon:hover{transform:none;box-shadow:none;border-color:var(--line)}
+
+/* ---------- شريط تقدم القراءة (Scroll Progress Bar) ---------- */
+/* شريط دهبي رفيع أعلى الصفحة بيتحرك مع التمرير — بينمو من اليمين (اتجاه القراءة) */
+#scroll-progress{
+  position:fixed;top:0;right:0;width:0;height:3px;
+  z-index:9999;pointer-events:none;
+  background:linear-gradient(to left,#ffd700,#f5d061 35%,#d4af37 70%,#b8860b);
+  box-shadow:0 0 8px rgba(255,215,0,.55),0 1px 3px rgba(0,0,0,.25);
+  border-radius:0 0 0 4px;
+  transition:width .1s linear;
+}

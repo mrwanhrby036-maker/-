@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- شريط تقدم القراءة: شريط دهبي رفيع بيتحرك مع التمرير -->
+  <div id="scroll-progress" aria-hidden="true"></div>
   <!-- شاشة التحميل (٢.٥ ثانية) -->
   <div id="loader" class="loader-screen" role="status" aria-label="جاري تحميل المنصة">
     <div class="loader-container">
@@ -101,5 +103,22 @@
        لما المنصة تتفتح كملف من الجهاز بيتحمّل كده، وعلى النت script.js بيجيبه بـ fetch -->
   <script>if (location.protocol === "file:") { var s = document.createElement("script"); s.src = "ai_grader.py"; document.head.appendChild(s); }</script>
   <script src="script.js"></script>
-</body>
+  <script>
+    /* شريط تقدم القراءة — بيتحرك مع التمرير (نسبة النزول في الصفحة) */
+    (function () {
+      var bar = document.getElementById("scroll-progress");
+      if (!bar) return;
+      function update() {
+        var d = document.documentElement, b = document.body;
+        var top = d.scrollTop || b.scrollTop || 0;
+        var max = (d.scrollHeight || b.scrollHeight || 0) - d.clientHeight;
+        bar.style.width = (max > 2 ? Math.min(100, top / max * 100) : 0) + "%";
+      }
+      addEventListener("scroll", update, { passive: true });
+      addEventListener("resize", update);
+      document.addEventListener("DOMContentLoaded", update);
+      update();
+    })();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a410ea680e903d73',t:'MTc5MDQxMTUyMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

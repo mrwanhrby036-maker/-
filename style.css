@@ -938,3 +938,44 @@ body.exam-mode{background:var(--milk)}
   border-radius:0 0 0 4px;
   transition:width .1s linear;
 }
+
+/* =====================================================================
+   المساعد الذكي — شاشة «اسأل الذكاء»
+   ===================================================================== */
+.ai-head{display:flex;align-items:center;gap:1rem;margin:.8em 0 1.2em}
+.ai-orb{width:64px;height:64px;flex:0 0 64px;border-radius:50%;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(135deg,var(--coffee),var(--caramel));box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.ai-orb .i{width:32px;height:32px}
+.ai-head h1{margin:0 0 .15em}
+.ai-head p{margin:0;opacity:.75}
+.chat-box{display:flex;flex-direction:column;gap:.7em;min-height:280px;max-height:52vh;overflow-y:auto;
+  padding:1em;border:2px solid rgba(184,138,98,.35);border-radius:1.2em;background:rgba(184,138,98,.07);margin-bottom:.8em}
+.msg{display:flex}
+.msg.user{justify-content:flex-end}
+.msg.bot{justify-content:flex-start}
+.bubble{max-width:82%;padding:.7em 1em;border-radius:1.1em;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+.msg.bot .bubble{background:rgba(0,0,0,.07);border:1.5px solid rgba(0,0,0,.08)}
+.msg.user .bubble{background:var(--coffee);color:#fff;border:1.5px solid var(--coffee)}
+[data-theme="dark"] .msg.bot .bubble{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
+[data-theme="dark"] .msg.user .bubble{background:var(--caramel);border-color:var(--caramel);color:#1c1410}
+.chat-src{display:block;margin-top:.5em;opacity:.8;font-size:.85em}
+.msg.user .bubble.thinking{animation:ai-pulse 1s ease-in-out infinite}
+@keyframes ai-pulse{50%{opacity:.55}}
+.chat-chips{display:flex;flex-wrap:wrap;gap:.5em;margin-bottom:.7em}
+.chip{border:1.5px solid rgba(184,138,98,.5);background:rgba(184,138,98,.12);color:inherit;border-radius:2em;
+  padding:.45em .95em;font:inherit;font-size:.9rem;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.chip:hover{background:var(--coffee);color:#fff;border-color:var(--coffee)}
+.chat-input{display:flex;gap:.6em}
+.chat-input input{flex:1;font:inherit;padding:.75em 1em;border-radius:1em;border:2px solid rgba(184,138,98,.4);
+  background:transparent;color:inherit;outline:none;transition:border-color .2s}
+.chat-input input:focus{border-color:var(--coffee)}
+@media (max-width:640px){.bubble{max-width:92%}.ai-orb{width:52px;height:52px;flex-basis:52px}}
+
+/* شفافية التفكير + عداد الذاكرة في شاشة المساعد */
+.grow{flex:1}
+.chat-mem{display:block;opacity:.65;font-size:.85em;margin-top:.2em}
+.chat-think{margin-top:.6em;font-size:.88em;border-top:1px dashed rgba(184,138,98,.4);padding-top:.45em}
+.chat-think summary{cursor:pointer;opacity:.75;font-weight:600;display:flex;align-items:center;gap:.35em}
+.chat-think summary:hover{opacity:1}
+.chat-think .think-line{opacity:.8;margin-top:.3em;line-height:1.6}
+.chat-think summary .i{width:14px;height:14px}

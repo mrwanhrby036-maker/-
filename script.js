@@ -476,7 +476,7 @@ const SUBJECTS = [
                       { who: "student", text: "أن نحفظ الكلمات ونرددها؟" },
                       { who: "teacher", text: "لم تعد الغاية حفظ الكلمات وتلقينها، وإنما صناعة الفِكر وتمليك مفاتيح البيان؛ لتكون قادرًا على الفهم والتحليل والمناقشة." },
                       { who: "student", text: "وكيف سنصل إلى ذلك؟" },
-                      { who: "teacher", text: "بدليل لنواتج التعلم: شرح بسيط سلس لكل ناتج، وأمثلة تحاكي دروس المنهج، ونماذج تطبيقية على هيئة أسئلة مقالية وموضوعية على نمط أسئلة كتاب الوزارة." },
+                      { who: "teacher", text: "بدليل لنواتج التعلم: شرح بسيط سلس لكل ناتج، وأمثلة تحاكي دروس المنهج، ونماذج تطبيقية على هيئة أسئلة تفاعلية وموضوعية على نمط أسئلة كتاب الوزارة." },
                       { who: "student", text: "ومن أين نبدأ؟" },
                       { who: "teacher", text: "قبل التعمق في النواتج علينا أن نعرف معنى «الحجاج»؛ لأنه يعتبر محورًا للمنهج كاملًا." },
                       { who: "student", text: "الحجاج؟ كلمة جديدة عليّ! ما معناها؟" },
@@ -504,7 +504,7 @@ const SUBJECTS = [
                           rows: [
                             ["شرح", "كل ناتج شرحًا بسيطًا سلسًا."],
                             ["أمثلة", "على كل ناتج تحاكي دروس المنهج."],
-                            ["نماذج تطبيقية", "على هيئة أسئلة مقالية وموضوعية تتناول كل ناتج على نمط أسئلة كتاب الوزارة."],
+                            ["نماذج تطبيقية", "على هيئة أسئلة تفاعلية وموضوعية تتناول كل ناتج على نمط أسئلة كتاب الوزارة."],
                           ],
                         },
                       },
@@ -2679,7 +2679,7 @@ const QUESTIONS = [
           py = await loadPyodide({ indexURL: args.url, stdout: (t) => self.postMessage({ log: t }) });
           py.globals.set("__browser_src__", args.full);
           py.runPython(args.code);
-          self.postMessage({ id, ok: true, value: py.globals.get("browser_start")(args.data, args.model || "") });
+          self.postMessage({ id, ok: true, value: py.globals.get("browser_start")(args.data, args.model || "", args.memory || "") });
         } else self.postMessage({ id, ok: true, value: py.globals.get(cmd)(...args) });
       } catch (err) { self.postMessage({ id, ok: false, error: String((err && err.message) || err) }); }
     };`;
@@ -2699,6 +2699,8 @@ const QUESTIONS = [
       if (!model && location.protocol.startsWith("http")) {
         try { const r = await fetch("ai_model.json"); if (r.ok) model = await r.text(); } catch (e) {}
       }
+      let memory = ""; // المومري: ذاكرة المساعد (معرفة عامة + ويكيبيديا محفوظة)
+      try { const r = await fetch("ai_memory.json"); if (r.ok) memory = await r.text(); } catch (e) {}
       const w = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: "text/javascript" })));
       w.onmessage = (e) => {
         const m = e.data;
@@ -2708,7 +2710,7 @@ const QUESTIONS = [
       };
       w.onerror = () => { Object.values(AI.wait).forEach((pr) => pr.rej(new Error("worker"))); AI.wait = {}; };
       AI.worker = w;
-      const init = aiSend("init", { url: PYODIDE_URL, full, code: full.slice(a, b), model,
+      const init = aiSend("init", { url: PYODIDE_URL, full, code: full.slice(a, b), model, memory,
         data: `{"subjects":${CURRICULUM_JSON},"questions":${JSON.stringify(QUESTIONS)},"site":${JSON.stringify(SITE.name)}}` });
       const r = JSON.parse(await Promise.race([init, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 120000))]));
       if (r.trained && r.model) { try { localStorage.setItem("mp_ai_model", JSON.stringify(r.model)); } catch (e) {} }
@@ -2859,7 +2861,7 @@ const QUESTIONS = [
 
   /* الإطار المتحرك بتاع القائمة: بيروح عند الزرار اللي عليه الماوس، ولما يسيبه يرجع للصفحة الحالية */
   const $navBox = document.querySelector(".nav-box"), $rect = document.querySelector(".main-nav .rect");
-  const NAV_OF = { home: "home", subject: "lessons", part: "lessons", unit: "lessons", lesson: "lessons", examStatus: "lessons" };
+  const NAV_OF = { home: "home", subject: "lessons", part: "lessons", unit: "lessons", lesson: "lessons", examStatus: "lessons", ai: "ai" };
   function outlineTo(btn) {
     if (!btn || !$navBox.clientWidth) { $rect.style.strokeDashoffset = "5"; $rect.style.strokeDasharray = "0 0 10 40 10 40"; return; }
     const w = $navBox.clientWidth, h = $navBox.clientHeight, P = 2 * (w + h);
@@ -3204,8 +3206,8 @@ const QUESTIONS = [
 
   /* ---------- كارت الامتحان النهائي في آخر الدرس ---------- */
   function examCard(l, host, closingHost) {
-    const qs = qOf(l.id), e = examOf(l.id);
-    const nEs = qs.filter((q) => q.type === "essay").length, nObj = qs.length - nEs;
+    const qs = qOf(l.id).filter((q) => q.type !== "essay"), e = examOf(l.id); // المقالي اتشال
+    const nObj = qs.length;
     const total = qs.reduce((t, q) => t + marksOf(q), 0);
     let body;
     if (!qs.length) body = `<div class="placeholder">${I("info")} لسه مفيش أسئلة للدرس ده.</div>`;
@@ -3217,7 +3219,7 @@ const QUESTIONS = [
         <small>${e.passed ? "ناجح — برافو عليك!" : "محتاج ٥٠٪ عشان تنجح — راجع الدرس وجرّب تاني."}</small></div></div>
       <div class="btn-row"><button class="btn soft" data-exstatus>${I("list")} تفاصيل التصحيح</button><button class="btn" data-exstart>${I("refresh")} امتحن تاني</button></div>`;
     else body = `
-      <p class="exam-intro">امتحان على الدرس كله في صفحة لوحده: <b>${qWord(nObj)} موضوعي</b>${nEs ? ` و<b>${qWord(nEs)} مقالي</b>` : ""} — المجموع <b>${ar(total)} درجة</b>.</p>
+      <p class="exam-intro">امتحان موضوعي على الدرس كله في صفحة لوحده: <b>${qWord(nObj)}</b> — المجموع <b>${ar(total)} درجة</b>. ولو عندك سؤال في الدرس، اسأل «اسأل الذكاء» من القائمة فوق.</p>
       <ul class="exam-rules">
         <li>مفيش تصحيح أثناء الحل، جاوب على كل الأسئلة براحتك.</li>
         <li>في الآخر اضغط «إرسال الإجابات»، والمصحح الذكي هيراجعها سؤال سؤال.</li>
@@ -3495,12 +3497,122 @@ const QUESTIONS = [
       (m, close) => { m.querySelector("[data-n]").onclick = close; m.querySelector("[data-y]").onclick = () => { close(); retry(); }; });
   }
 
+  /* =====================
+     المساعد الذكي: بيرد على أسئلة الطالب من معرفة المنهج
+     ===================== */
+  const CHAT_LOG = []; // ذاكرة المحادثة في الجلسة
+  async function wikiLookup(question) {
+    // التحقق من المعلومة من السحابة: ويكيبيديا العربية (CORS مفتوح — origin=*)
+    const STOP = new Set(["ايه", "إيه", "مين", "ليه", "عشان", "ازاي", "إزاي", "امتى", "فين", "كام", "يعني", "معني", "معنى",
+                          "تعريف", "مقصد", "هو", "هي", "في", "من", "عن", "زي", "قول", "شوف", "كده", "دي", "اللي", "ما", "ولا",
+                          "مش", "اول", "اخترع", "مخترع", "بس", "ده", "ديه"]);
+    const toks = question.split(/\s+/).map((w) => w.replace(/[«»()\[\]،؛:؟?!.,]/g, "")).filter((w) => w.length >= 2 && !STOP.has(w));
+    if (!toks.length) return null;
+    const key = toks.join(" ").slice(0, 60);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 7000);
+    try {
+      const direct = async (t) => {
+        const rr = await fetch("https://ar.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(t), { signal: ctrl.signal });
+        if (!rr.ok) return null;
+        const d = await rr.json();
+        const ext = (d.extract || "").trim();
+        return ext.length > 80 ? { title: d.title || t, text: ext } : null;
+      };
+      let out = await direct(key);
+      if (!out && key.startsWith("ال") && key.length > 4) out = await direct(key.slice(2));
+      if (!out) {
+        const uniq = [...new Set(toks)].sort((a2, b2) => b2.length - a2.length);
+        for (const q2 of [uniq.slice(0, 2).join(" "), uniq[0]]) {
+          const rr = await fetch("https://ar.wikipedia.org/w/api.php?action=query&format=json&list=search&srlimit=3&srsearch=" + encodeURIComponent(q2) + "&origin=*", { signal: ctrl.signal });
+          const d = await rr.json();
+          const hits = (d.query && d.query.search) || [];
+          const parts = q2.split(" ");
+          const rel = hits.filter((h) => { const tn = h.title; return parts.filter((p) => tn.includes(p)).length >= Math.max(1, Math.ceil(parts.length / 2)); });
+          if (rel.length) { out = await direct(rel[0].title); if (out) break; }
+        }
+      }
+      return out;
+    } catch (e) { return null; }
+    finally { clearTimeout(timer); }
+  }
+
+  screens.ai = () => {
+    aiWarm();
+    const chips = ["إيه مقومات نشأة الدولة المصرية؟", "يعني إيه كناية؟", "إيه الفرق بين الحجة العقلية والعاطفية؟",
+                   "ليه مصر كانت مستقرة عبر التاريخ؟", "يعني إيه ديمقراطية؟", "إيه أهمية التعليم؟"];
+    render(`
+      ${crumbs([{ t: "الرئيسية", go: ["home", {}] }, { t: "اسأل الذكاء" }])}
+      <div class="ai-head">
+        <div class="ai-orb">${I("brain")}</div>
+        <div class="grow"><h1>اسأل الذكاء الاصطناعي</h1>
+        <p>اسأل أي حاجة عن دروس المنهج — بالعامية أو الفصحى — ولو مش عارف هيقولك بدل ما يخمّن. <span id="mem-stat" class="chat-mem"></span></p></div>
+        <button class="btn soft small" id="chat-clear">${I("refresh")} امسح</button>
+      </div>
+      <div class="chat-box" id="chat-log" aria-live="polite"></div>
+      <div class="chat-chips" id="chat-chips">${chips.map((c) => `<button class="chip" data-chip="${esc(c)}">${esc(c)}</button>`).join("")}</div>
+      <form class="chat-input" id="chat-form">
+        <input id="chat-text" type="text" autocomplete="off" maxlength="300" placeholder="اكتب سؤالك هنا..." aria-label="سؤالك" />
+        <button class="btn" type="submit">${I("play")} اسأل</button>
+      </form>`);
+    const $log = $("#chat-log");
+    const WELCOME = "أهلاً 👋 أنا مساعدك الذكي. اسألني أي سؤال عن الدروس وأنا هجاوبك من الكتاب نفسه — وسؤالك التاني بعد التاني بيفهمه كأنه تكملة.";
+    const add = (who, html, save = true) => {
+      const d = document.createElement("div");
+      d.className = "msg " + who;
+      d.innerHTML = `<div class="bubble">${html}</div>`;
+      $log.appendChild(d);
+      $log.scrollTop = $log.scrollHeight;
+      if (save) CHAT_LOG.push({ who, html });
+      return d;
+    };
+    if (CHAT_LOG.length) CHAT_LOG.forEach((m) => add(m.who, m.html, false));
+    else add("bot", WELCOME);
+    $("#chat-clear").onclick = () => { sfx.click(); CHAT_LOG.length = 0; $log.innerHTML = ""; add("bot", WELCOME); $("#mem-stat").textContent = ""; };
+    let busy = false;
+    async function sendQ(q) {
+      q = String(q || "").trim();
+      if (!q || busy) return;
+      busy = true;
+      add("user", q);
+      const t = add("bot", "بفكر في سؤالك...");
+      t.querySelector(".bubble").classList.add("thinking");
+      try {
+        let r;
+        try { await aiReady(); r = JSON.parse(await aiSend("browser_ask", [q])); }
+        catch (e) { r = await remoteApi("ask", { q }); }
+        await sleep(350 + Math.random() * 450); // بياخد وقته قبل ما يحكم — مش برد فوري
+        t.querySelector(".bubble").classList.remove("thinking");
+        // لو مفيش مصدر (المومري والمنهج ما لقوش) — بشيك على السحابة مباشرة من المتصفح
+        if (!r.source || r.source === "—") {
+          try {
+            const w = await wikiLookup(q);
+            if (w) r = { q: q, answer: w.text, source: "ويكيبيديا (مباشر من السحابة)", lesson: w.title, confidence: 0.55 };
+          } catch (e) {}
+        }
+        const src1 = `<small class="chat-src">${I("info")}${r.source && r.source !== "—" ? " " + esc(r.source) + " — " : ""}${r.lesson ? "«" + esc(r.lesson) + "» — " : ""}الثقة ${ar(Math.round((r.confidence || 0) * 100))}٪</small>`;
+        const ths = (r.thoughts || []).slice(0, 8);
+        const det = ths.length ? `<details class="chat-think"><summary>${I("brain")} إزاي فكرت؟</summary>${ths.map((x) => `<div class="think-line">• ${esc(x)}</div>`).join("")}</details>` : "";
+        const html = `${esc(r.answer || "مش لاقي إجابة... جرب تسأل بشكل تاني.")}${src1}${det}`;
+        t.innerHTML = `<div class="bubble">${html}</div>`;
+        CHAT_LOG[CHAT_LOG.length - 1] = { who: "bot", html };
+        if (r.mem) $("#mem-stat").textContent = `📚 ذاكرته: ${ar(r.mem.wiki)} مقالة • ${ar(r.mem.facts)} معلومة${r.mem.learned ? ` • اتعلم ${ar(r.mem.learned)} بنفسه` : ""}`;
+      } catch (e) {
+        t.innerHTML = `<div class="bubble">المساعد مش متاح دلوقتي — اتأكد إن المنصة شغالة وجرب تاني.</div>`;
+      }
+      busy = false;
+      $log.scrollTop = $log.scrollHeight;
+    }
+    $("#chat-form").onsubmit = (e) => { e.preventDefault(); sfx.click(); const v = $("#chat-text").value; $("#chat-text").value = ""; sendQ(v); };
+    $$("#chat-chips .chip").forEach((b) => { b.onclick = () => { sfx.click(); sendQ(b.dataset.chip); }; });
+    $("#chat-text").focus();
+  };
+
   screens.exam = ({ id }) => {
     aiWarm();
     const l = lessonById(id);
     if (examPending(examOf(id))) return go("examStatus", { id }, false);
-    const all = qOf(id);
-    const qs = [...shuffle(all.filter((q) => q.type !== "essay")), ...all.filter((q) => q.type === "essay")];
+    const qs = shuffle(qOf(id).filter((q) => q.type !== "essay")); // المقالي اتشال
     const total = qs.reduce((t, q) => t + marksOf(q), 0), ans = {};
     render(`
       <div class="exam-head">
@@ -3826,6 +3938,7 @@ const QUESTIONS = [
         const u = $("[data-units]"); if (u) u.scrollIntoView({ behavior: "smooth", block: "start" });
         setNav("lessons");
       }
+      if (k === "ai") go("ai");
     };
   });
   $navBox.onmouseleave = () => outlineTo($(".nav-btn.active", $navBox));

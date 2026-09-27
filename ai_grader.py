@@ -47,6 +47,24 @@ window.AI_GRADER_SRC = (function () {/*
     - الشبكة العصبية بقت ١٥ خاصية: اتضاف «أسماء الأفكار» و«بنية الإجابة» (NLP)
     - ترقية المعنى: لو المعنى الكلي قريب جدًا من الفكرة واسمها الرئيسي موجود تتحسب كاملة
     - التركيز كله على المقالي: الموضوعي بيتصحح مطابقة مباشرة (وده الأعدل والأسرع ليه)
+  الإصدار ١.٥ — المومري (ذاكرة المساعد) + السحابة:
+    - ملف ai_memory.json: ذاكرة المساعد (~٥ ميجا) — معرفة عامة (معلومات علمية وتاريخية
+      وجغرافية وتقنية) + تعاريف + أمثال + أنماط فهم + كل معرفة المنصة (القاموس
+      والعامية والمصطلحات وجمل الدروس) + مقالات ويكيبيديا العربية الكاملة المحفوظة
+      (ترخيص CC BY-SA) — بتشتغل حتى من غير نت
+    - المساعد بقى يرد على أسئلة خارج المنهج: بيدور في المومري الأول، ولو مش لاقي
+      بشيك على السحابة مباشرة (ويكيبيديا العربية) ويقول مصدر كل إجابة بصراحة
+    - بيفهم أنماط أسئلة أكتر: ليه/إزاي/يعني إيه/مين/إمتى/فين/كام/قارن/اذكر/رأي
+    - web_lookup: تحقق مباشر من السحابة بكاش — وبأمانة لو النت مش متاح
+  الإصدار ١.٤ — المساعد الذكي بيرد على الأسئلة، والمقالي اتشال من الامتحانات:
+    - المساعد الذكي (قائمة «اسأل الذكاء» في المنصة): الطالب يسأل بالعامية أو الفصحى
+      وبيرد من معرفة المنهج كلها: شرح الدروس + الإجابات الصح + النقاط الأساسية + قاموس المصطلحات
+    - بيفهم العامية المصرية (بيحولها فصحى الأول)، وبيرد على «يعني إيه» من قاموس الكلمات والمصطلحات
+    - ميخمنش: لو السؤال مش في المنهج بيقول صراحة إنه مش لاقي الإجابة بدل ما يخترع
+    - الأسئلة المقالية اتشالت من الامتحانات كلها — الموضوعي بس اللي بيتصحح
+    - إجابات المقالي النموذجية بقت معرفة بتغذي المساعد (مش ضايعة)
+    - «تحقق من إجابتك» في الدروس شغال زي ما هو (ده تدريب مش امتحان)
+    - إندبوينت جديد /api/ask + دالة browser_ask للمتصفح (Pyodide)
   الإصدار ١.٣ — ميخمنش: بيفكر بعمق وياخد وقته:
     - التعلم أعمق: ٢٤٠ دورة تدريب وشكل إجابة أصعب (صياغة + أخطاء مع بعض)
     - مداولة بخمس طرق حكم، ولو متباعدين: قراءة تالتة بالمرادفات قبل أي حكم
@@ -91,10 +109,11 @@ HERE = os.path.dirname(os.path.abspath(globals().get("__file__", "ai_grader.py")
 SCRIPT_JS = os.path.join(HERE, "script.js")
 MODEL_FILE = os.path.join(HERE, "ai_model.json")
 RESULTS_FILE = os.path.join(HERE, "ai_results.json")
+MEMORY_FILE = os.path.join(HERE, "ai_memory.json")  # مومري المساعد: معرفة عامة + ويكيبيديا محفوظة
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", 8765))  # على الاستضافة (زي Render) البورت بيتحدد من الموقع نفسه
 ONLINE = "PORT" in os.environ             # شغال على النت مش على جهاز
-VERSION = "1.3"
+VERSION = "1.5"
 SEED = 2026
 
 REVIEW_SECONDS_OBJECTIVE = 1.2   # وقت مراجعة السؤال الموضوعي
@@ -1771,7 +1790,10 @@ def numbers(text):
 class KnowledgeBase:
     def __init__(self, subjects, questions):
         self.lessons = {}
-        self.questions = {q["id"]: q for q in questions if "id" in q}
+        # المقالي اتشال من الامتحانات: مش بيظهر ولا بيتصحح للطلاب،
+        # وإجاباته النموذجية بقت معرفة بتغذي المساعد الذكي (تحت في الجمل)
+        self.questions = {q["id"]: q for q in questions if "id" in q and q.get("type") != "essay"}
+        self.n_essay = sum(1 for q in questions if q.get("type") == "essay")
         for sb in subjects:
             # الوحدات: مباشرة في القسم، أو جوه الأجزاء (زي العربي: الجزء الأول/الثاني/الثالث)
             for unit in sb.get("units", []) + [u for pt in sb.get("parts", []) for u in pt.get("units", [])]:
@@ -2058,6 +2080,9 @@ FEATURE_NAMES = ["تغطية الأفكار", "نسبة الأفكار المو�
                  "أسماء الأفكار", "بنية الإجابة"]
 # كلمات الربط والتعداد (قارئ بنية الإجابة): إجابة منظمة بأدوات ربط = بنية أحسن
 CONNECT_WORDS = _n("ثم ايضا أيضا كذلك بالاضافة بالإضافة اولا أولا ثانيا ثالثا رابعا كمان اخيرا أخيرا علاوة وعلاوة فوق كده وفوق")
+# كلمات وظيفية (بالسياق والصيغة الكاملة): أسئلة «يعني إيه» متتاخدش كأنها كلمة مطلوب شرحها
+_ASK_FW = "معنى معني يعني تعريف عرف كلمة كلمه دول دي اللي ايه إيه ما هو هي في من علي على ازاي إزاي ليه امتى مقصد قصد وضح وضح اشرح شرح".split()
+ASK_FUNC_WORDS = set(_n(" ".join(_ASK_FW))) | {stem(normalize(w)) for w in _ASK_FW}
 
 
 class Reader:
@@ -4027,60 +4052,35 @@ def deep_self_test(grader):
         t = content_tokens(w)[0]
         say("  إملاء: «%s» ← «%s»" % (w, dp.speller.fix(t)))
     Q = grader.kb.questions
-    cases = []
-    if "a12" in Q:
-        cases += [("a12", "مقارنة صح", Q["a12"]["model"]),
-                  ("a12", "وسائل معكوسة", "الحجج العقلية تعتمد على مخاطبة العقل والمنطق ومن وسائلها الصور البيانية والتعاطف الإنساني، "
-                                          "والحجج العاطفية تعتمد على مخاطبة الوجدان والمشاعر ومن وسائلها الأرقام والإحصائيات والتفسير العلمي")]
-    if "a13" in Q:
-        cases += [("a13", "أمثلة معكوسة", "الفهم ومن أمثلته تقييم قوة الحجة، والتحليل ومن أمثلته استنتاج الفكرة الرئيسة، "
-                                          "والمناقشة ومن أمثلتها التمييز بين الحجة العقلانية والعاطفية")]
-    if "e4" in Q:
-        cases += [("e4", "سبب ونتيجة معكوسين", "انصهار السكان في بوتقة ثقافية واحدة نتيجة تشكيل اتحاد متماسك يصعب تفتيته، "
-                                               "وجعل الوحدة السياسية أمرا طبيعيا وحماية المصريين من التأثر بثقافة المحتل والحفاظ على الهوية")]
-    if "e1" in Q:
-        cases += [("e1", "بالعامية وأخطاء إملائية", "من المقومات الموقع الجغرافى والحدود الطبيعيه والموارد الطبيعيه والتجانس البشرى "
-                                                  "والوحده الوطنيه والحكومه المركزيه القويه والقوه العسكريه وكمان الحفاظ على الهويه المصريه")]
-    if "e1" in Q:
-        cases += [("e1", "الأفكار كلها بالاسم بس", "، ".join(Q["e1"]["points"])),
-                  ("e1", "أسماء مختصرة بصيغة الطالب", "موقعها وحدودها الطبيعية ومواردها وتجانس السكان والوحدة الوطنية وحكومة مركزية قوية وقوة عسكرية والحفاظ على الهوية"),
-                  ("e1", "أسماء بالعامية", "مكان مصر وحدودها الطبيعية وموارد الأرض وتجانس الناس والحكومة القوية والجيش والحفاظ على الهوية")]
-    if "e1" in Q:
-        cases += [("e1", "إجابة ملتبسة (تروح للمراجعة)", "الدولة ليها حاجات كتير مهمة بتخص المكان والناس والحكم والحماية وحاجات تانية كتير بتخليها قوية ومستقرة")]
-    say("  أرقام بالحروف: «اتناشر ميل» ← %s ، «اثنا عشر ميلًا» ← %s ، «خمسة وعشرين» ← %s"
-        % (words_to_numbers("اتناشر ميل"), words_to_numbers("اثنا عشر ميلا"), words_to_numbers("خمسة وعشرين")))
-    if "e1" in Q:
-        cases += [("e1", "الحاجة وعكسها", "الموقع الجغرافي والحدود الطبيعية والموارد الطبيعية والتجانس البشري والحكومة المركزية القوية، "
-                                          "لكن الحكومة المركزية كانت ضعيفة، والقوة العسكرية والحفاظ على الهوية المصرية")]
-    # القراءة التانية + مراجعة الاتجاه: نفس الكلام بالعامية مرة صح ومرة بالعكس
-    if "e3" in Q:
-        cases += [("e3", "صح بالعامية", "مصر حدودها طبيعية زي الصحرا والبحر ودي كانت زي سور بيحمي الوادي والدلتا، "
-                                        "فالمصريين قدروا يركزوا في الزراعة والتعمير، وده خلى الدولة مستقرة"),
-                  ("e3", "عكس بالعامية", "مصر مالهاش حدود طبيعية، فكانت مكشوفة ومحدش حماها فالدولة مكانتش مستقرة")]
-    if "b20" in Q:
-        cases += [("b20", "صح بالعامية", "العنوان بيوضح إن الكاتب شايف إن النبوغ مش موهبة ربانية وبس، لأ ده نتيجة صفات الإنسان "
-                                         "يقدر يكتسبها زي علو الهمة والاجتهاد وفهم العلم كويس"),
-                  ("b20", "عكس بالعامية", "العنوان بيوضح إن الكاتب شايف إن النبوغ موهبة ربانية وبس ومحدش يقدر يكتسبها بالاجتهاد")]
-    if "e4" in Q:
-        cases += [("e4", "صح بالعامية", "الشعب المصري اتحد ومحدش يقدر يفرقه لأن الناس اندمجت في ثقافة واحدة، وده خلى الوحدة "
-                                        "السياسية حاجة طبيعية، وحمى المصريين من ثقافة المحتل وحافظ على هويتهم"),
-                  ("e4", "عكس بالعامية", "الشعب المصري اتفرق ومبقاش فيه وحدة والناس ماندمجتش في ثقافة واحدة واتأثروا بثقافة المحتل")]
-    if "a11" in Q:
-        cases += [("a11", "صح بالعامية", "الحجاج ده عمليه عقليه ولغويه الكاتب بيحاول فيها يقنع القارئ برأيه أو يغير موقفه "
-                                         "أو يبطل رأي تاني بوسائل إقناع، ومحاوره المفهوم والضوابط والحجة")]
-    if "e3" in Q:
-        cases += [("e3", "ترديد السؤال", "ساعد الموقع الجغرافي لمصر على استقرارها عبر التاريخ")]
-    for qid, name, ans in cases:
-        r = th.grade_essay(Q[qid], ans)
-        say("  %s %-24s ← %s / %s" % (qid, name, r["score"], r["marks"]))
-
 
 class Thinker:
-    def __init__(self, kb, emb, net, liquid=None):
+    def __init__(self, kb, emb, net, liquid=None, memory=None):
         self.kb, self.emb, self.net = kb, emb, net
         self.liquid = liquid or LiquiNet()  # الطبقة السائلة
         self.reader = Reader(kb, emb)
         self.deep = DeepThinker(kb, self.reader)  # العقل التاني
+        self.mem = memory if memory is not None else load_memory_file()  # المومري
+        self._paras = None
+
+    def set_memory(self, mem):
+        if isinstance(mem, dict) and mem:
+            self.mem = mem
+            self._paras = None
+            self._defs_norm = None
+
+    def mem_paras(self):
+        """فهرس فقرات ويكيبيديا المحفوظة في المومري (بيتبني مرة)"""
+        if self._paras is None:
+            ps = []
+            for title, text in (self.mem.get("wiki") or {}).items():
+                for p in re.split(r"\n+", str(text)):
+                    p = p.strip()
+                    if 80 <= len(p) <= 900:
+                        toks = set(content_tokens(p))
+                        if len(toks) >= 4:
+                            ps.append((title, p, toks))
+            self._paras = ps
+        return self._paras
 
     def lesson_evidence(self, point, lesson):
         """بيدوّر في الدرس على الجملة اللي بتشرح الفكرة الناقصة"""
@@ -4402,6 +4402,300 @@ class Thinker:
         missing = [it for it in right_cat if it not in given]
         return wrong, missing
 
+    # ---- المساعد الذكي: بيرد على أسئلة الطالب من معرفة المنهج ----
+    def ask_inner(self, question):
+        raw = str(question or "").strip()[:500]
+        th = []
+        out = {"q": raw, "answer": "", "lesson": "", "sources": [], "confidence": 0.0, "thoughts": th}
+        if not content_tokens(raw):
+            out["answer"] = "اكتب سؤالك وأنا هجاوبك من المنهج."
+            return out
+        nraw = normalize(raw)
+        # تحية وتشكر: رد لطيف من غير ما ندور في المنهج
+        _GREET = ("اهلا", "hello", "hi ", "سلام", "مرحبا", "ازيك", "ايه الاخبار", "صباح", "مساء", "شكرا", "متشكر", "تسلم")
+        if len(words(nraw)) <= 3 and any(g in nraw for g in _GREET):
+            out["answer"] = ("أهلاً بيك! 🙋 اسألني أي سؤال عن الدروس أو أي معلومة عامة — بالعامية أو الفصحى، "
+                             "وأنا هجاوبك وأقولك منين جبتها.")
+            out["source"] = "تحية"
+            return out
+        if nraw in DONT_KNOW or any(nraw.startswith(d) and len(words(nraw)) <= 4 for d in DONT_KNOW):
+            out["answer"] = "ولا يهمك، خد وقتك — ولما تحب تسأل أي سؤال من الدرس أنا معاك."
+            return out
+        msa = colloquial_to_msa(raw)  # لو السؤال جاي بالعامية بيفهمه الأول
+        qn = normalize(msa)
+        toks = content_tokens(qn)
+        stems = [stem(t) for t in toks]
+        # ذاكرة المحادثة: سؤال قصير أو بـ«و» في الأول غالبًا بيكمل السؤال اللي قبله
+        if not hasattr(self, "convo"):
+            self.convo = []
+        prev = self.convo[-1] if self.convo else None
+        cont = bool(prev) and (len(toks) <= 2 or nraw.startswith("و") or
+                               any(nraw.startswith(p) for p in ("ومين", "وايه", "ايه", "وليه", "وعشان", "وامتى", "وفين", "وكام")))
+        msa_ctx = msa
+        if cont and prev:
+            stems = list(dict.fromkeys(prev["stems"] + stems))
+            toks = list(dict.fromkeys(prev["toks"] + toks))
+            msa_ctx = prev["msa"] + " " + msa
+            th.append("كمّلت سؤالك السابق عن «%s» — فهمت إنك لسه بتسأل عن نفس الموضوع." % self.short(prev["raw"], 50))
+        self.convo.append({"raw": raw, "msa": msa, "stems": list(stems), "toks": list(toks)})
+        del self.convo[:-3]  # بنفتكر آخر ٣ أسئلة بس
+        qset = set(stems)
+        ask_def = any(t in qn or t in nraw for t in ("يعني", "معني", "معنى", "تعريف", "مقصد")) \
+            or any(p in qn or p in nraw for p in ("ايه هو", "ايه هي", "ما هو", "ما هي", "ماهو", "ماهي"))
+        ask_prov = any(t in qn or t in nraw for t in ("مثل", "مقول", "حكمة", "حكمه"))
+        ask_who = "مين" in nraw.split() or nraw.startswith("مين ") or qn.startswith("من هو") or " من هو " in qn
+        for keys, label in (self.mem.get("patterns") or []):
+            if any(k and (k in qn or k in nraw) for k in keys.split("|")):
+                th.append("نوع السؤال: %s." % label)
+                break
+        th.append("فهمت السؤال%s: «%s»." % (" (كان بالعامية وفهمته)" if msa != raw else "", self.short(msa, 80)))
+        # أشكال كلمات السؤال من النص الخام + خريطة «السياق ← الكلمة الأصلية» للعرض
+        disp = {}
+        t_cands = list(stems) + list(toks)
+        for w in raw.split():
+            nw = normalize(w.strip("«»()[]،؛:؟?!."))
+            if len(nw) >= 3:
+                disp.setdefault(stem(nw), w.strip("«»()[]،؛:؟?!."))
+                t_cands += [stem(nw), nw]
+                if nw.startswith("ال") and len(nw) > 4:
+                    disp.setdefault(stem(nw[2:]), nw[2:])
+                    t_cands += [stem(nw[2:]), nw[2:]]
+        t_cands = list(dict.fromkeys(t_cands))
+        # ١) مصطلح من قاموس المنهج؟ (بجرب السياق والصيغة كاملة وحتى من غير «ال»)
+        term_hit = None
+        for t in t_cands:
+            d = _TERM.get(t)
+            if d:
+                term_hit = (t, d)
+                break
+        # ٢) سؤال قصير عن معنى كلمة؟ القاموس بيجاوب (بس لما في سؤال معنى حقيقي وكلمة مش وظيفية)
+        word_info = None
+        FUNC_W = ASK_FUNC_WORDS
+        if len(toks) <= 4 and any(t in FUNC_W for t in toks):
+            for t in list(dict.fromkeys(stems)):
+                if t in FUNC_W:
+                    continue
+                ids = syn_ids(t)
+                if ids:
+                    syn = [x for gi in sorted(ids) for x in ALL_SYN_GROUPS[gi] if stem(normalize(x)) != t]
+                    r = ant_of(t)
+                    ants = [x for x in ANT_SIDE_WORDS[r[0]][1 - r[1]]] if r else []
+                    word_info = {"w": disp.get(t, t), "syn": syn[:8], "ant": ants[:6]}
+                    break
+        # ٣) استرجاع دلالي من كل معرفة المنهج (شرح الدروس + الإجابات الصح + النقاط الأساسية)
+        qvec = self.emb.sentence(stems, self.kb)
+        sents = self.kb.sentences
+        scored = []
+        for i, (lid, text, stoks) in enumerate(sents):
+            sim = cosine(qvec, self.emb.sentence(stoks, self.kb))
+            ov = len(qset & {stem(t) for t in stoks}) / max(1.0, float(len(qset)))
+            if len(qset) <= 3 and ov < 0.25:
+                continue  # سؤال قصير: من غير تداخل حقيقي مفيش حكم (ميخمنش)
+            if sim > 0.02 or ov >= 0.2:
+                scored.append((0.65 * sim + 0.35 * ov, sim, lid, i))
+        scored.sort(key=lambda x: (-x[0], -x[1]))
+        sim_top = scored[0][1] if scored else 0.0
+        ov_top = (len(qset & set(sents[scored[0][3]][2])) / max(1.0, float(len(qset)))) if scored else 0.0
+        # سؤال «مين» لازم المنهج يقابلها بتداخل حقيقي — التشابه الدلالي لوحده بيخمّن
+        cur_strong = bool(scored) and sim_top >= 0.35 and ov_top >= (0.5 if (ask_who or cont) else 0.2)
+        if ask_prov:
+            r = self._try_proverbs(qn, qset, out)
+            if r:
+                return r
+        if ask_def and not term_hit:
+            # التعريف/المعلومة الدقيقة أولى من تطابقة منهج مشكوكة
+            r = self._try_defs(disp, out, qn) or self._try_facts(qset, out)
+            if r:
+                return r
+        if not cur_strong:
+            th.append("مطابقة المنهج مش قوية (%s٪ وتداخل %s٪) — بشوف المومري الأول قبل ما أحكم."
+                      % (to_ar(round(sim_top * 100)), to_ar(round(ov_top * 100))))
+            r = (self._try_defs(disp, out, qn) if ask_def else None) or self._try_facts(qset, out) or self._try_wiki_saved(stems, qset, out)
+            if r:
+                return r
+            th.append("المومري ملقاش — بشيك على السحابة (ويكيبيديا العربية) بدل ما أخترع.")
+            w = web_lookup(msa_ctx if len(content_tokens(msa_ctx)) >= 2 else raw)
+            if w:
+                learned = bool(w.get("learned"))
+                th.append(("الذاكرة متعلمة الإجابة دي من السحابة قبل كده: «%s»." if learned else
+                           "السحابة ردت: مقالة «%s» — اتأكدت من المعلومة من الإنترنت (وهتحفظ في المومري).") % w["title"])
+                out["answer"] = w["text"]
+                out["source"] = "ويكيبيديا (اتعلمتها من السحابة)" if learned else "ويكيبيديا (مباشر من السحابة)"
+                out["lesson"] = w["title"]
+                out["confidence"] = 0.55
+                return out
+            if not scored:
+                th.append("حتى السحابة ملقتش مطابقة واضحة — برد بأمانة إن الإجابة مش متوفرة.")
+                out["answer"] = "دورت في المنهج والذاكرة العامة والسحابة وما لقيتش إجابة واثق منها — وأنا مش بأخمّن. جرّب صياغة تانية للسؤال."
+                out["source"] = "—"
+                out["mem"] = self.mem_stats()
+                return out
+            th.append("السحابة ملقتش حاجة — هرجع لأقرب مطابقة في المنهج والدرجة المحفوظة بتقول مبتدأش.")
+        # ٤) نوافذ جمل (لحد ٣ جمل متتالية في نفس الدرس) = إجابات مرشحة والأقرب للسؤال بيكسب
+        seen, cands = set(), []
+        for mixv, sim, lid, i in scored[:12]:
+            parts_, j = [], i
+            while j < len(sents) and sents[j][0] == lid and len(parts_) < 3:
+                parts_.append(sents[j][1])
+                j += 1
+            wtext = re.sub(r"\s+", " ", " ".join(parts_)).strip()
+            if wtext and wtext not in seen:
+                seen.add(wtext)
+                cands.append((mixv, sim, lid, wtext))
+            if len(cands) >= 5:
+                break
+        mixv, sim, lid, wtext = cands[0]
+        L = self.kb.lessons.get(lid, {})
+        th.append("لقيت الإجابة في درس «%s» — التشابه %s٪." % (L.get("title", ""), to_ar(round(sim * 100))))
+        # ٥) تركيب الرد: المصطلح/الكلمة الأول، وبعدها إجابة المنهج، وسطر إضافي لو في إجابة قوية تانية
+        bits = []
+        if term_hit:
+            bits.append("«%s» يعني: %s." % (term_hit[0], term_hit[1]))
+        elif word_info:
+            b = "«%s» معناها قريب من «%s»" % (word_info["w"], word_info["syn"][0] if word_info["syn"] else word_info["w"])
+            if word_info["ant"]:
+                b += "، وعكسها «%s»" % word_info["ant"][0]
+            bits.append(b + ".")
+        bits.append(wtext)
+        if not term_hit and not word_info and len(cands) > 1 and cands[1][0] >= 0.8 * mixv:
+            extra = split_sentences(cands[1][3])
+            if extra and extra[0] not in wtext:
+                bits.append("وكمان في المنهج: " + extra[0])
+        out["answer"] = " ".join(bits)
+        out["lesson"] = L.get("title", "")
+        out["subject"] = L.get("subject", "")
+        out["sources"] = list(dict.fromkeys(self.kb.lessons.get(c[2], {}).get("title", "") for c in cands[:3]))
+        out["confidence"] = round(min(1.0, sim), 2)
+        out["source"] = out.get("source", "المنهج")
+        out["mem"] = self.mem_stats()
+        return out
+
+    def ask(self, question):
+        """غلاف موحد: أي رد بيتم بإحصائية المومري"""
+        out = self.ask_inner(question)
+        try:
+            out["mem"] = self.mem_stats()
+        except Exception:
+            pass
+        return out
+
+    def mem_stats(self):
+        """إحصائية المومري: عشان الطالب يشوف ذاكرته قد إيه"""
+        m = self.mem or {}
+        return {"wiki": len(m.get("wiki") or {}), "facts": len(m.get("facts") or []),
+                "defs": len(m.get("defs") or {}), "learned": len((m.get("learned") or {}))}
+
+    def _try_proverbs(self, qn, qset, out):
+        """الأمثال والحكم من المومري"""
+        best, bp = 0, None
+        for pr in self.mem.get("proverbs", []):
+            ks = {stem(t) for t in content_tokens(pr["p"])} | {stem(t) for t in content_tokens(pr["m"])}
+            ov = len(qset & ks) / max(2.0, float(len(qset)))
+            if ov > best:
+                best, bp = ov, pr
+        if bp and best >= 0.4:
+            out["thoughts"].append("لقيت المثل في الذاكرة العامة.")
+            out["answer"] = "المثل بيقول: «%s» — ومعناه: %s." % (bp["p"], bp["m"])
+            out["source"] = "الذاكرة (أمثال)"
+            out["confidence"] = round(min(1.0, best), 2)
+            return out
+        return None
+
+    def _try_defs(self, disp, out, qn=""):
+        """تعاريف عامة (خارج مصطلحات المنهج) من المومري — كلمة واحدة أو اسم مركب"""
+        defs = self.mem.get("defs") or {}
+        dn = getattr(self, "_defs_norm", None)
+        if dn is None:
+            dn = {normalize(k): v for k, v in defs.items()}
+            self._defs_norm = dn
+        cands = list(disp.keys())
+        ws = [w for w in qn.split() if len(w) >= 3 and w not in ASK_FUNC_WORDS and stem(w) not in ASK_FUNC_WORDS]
+        for i in range(len(ws) - 1):
+            b = ws[i] + " " + ws[i + 1]
+            b2 = " ".join(w[2:] if w.startswith("ال") and len(w) > 4 else w for w in b.split())
+            cands += [b, b2]
+        for t in cands:
+            words_t = t.split()
+            t_alt = " ".join(w[2:] if w.startswith("ال") and len(w) > 4 else w for w in words_t)
+            d = defs.get(t) or dn.get(normalize(t)) or dn.get(normalize(t_alt)) or dn.get(stem(t))
+            if d:
+                out["thoughts"].append("المصطلح من الذاكرة العامة.")
+                shown = t if t in defs else (t_alt if t_alt in defs else t)
+                out["answer"] = "«%s» يعني: %s." % (shown, d)
+                out["source"] = "الذاكرة العامة"
+                out["confidence"] = 0.6
+                return out
+        return None
+
+    def _try_facts(self, qset, out):
+        """بنك المعرفة العامة: معلومات علمية وتاريخية وجغرافية وتقنية"""
+        best, bf = 0, None
+        for fa in self.mem.get("facts", []):
+            ks = set()
+            for k in fa.get("k", []):
+                ks |= {stem(normalize(x)) for x in k.split()}
+            ks |= {stem(t) for t in content_tokens(fa.get("q", ""))}
+            ov = len(qset & ks) / max(2.0, float(len(qset)))
+            if ov > best:
+                best, bf = ov, fa
+        if bf and best >= 0.45:
+            out["thoughts"].append("لقيت الإجابة في الذاكرة العامة (خارج المنهج) — التداخل %s٪." % to_ar(round(best * 100)))
+            out["answer"] = bf["a"]
+            out["source"] = "الذاكرة العامة"
+            out["confidence"] = round(min(1.0, best), 2)
+            return out
+        return None
+
+    def _try_wiki_saved(self, stems, qset, out):
+        """ويكيبيديا المحفوظة في المومري — بتشتغل حتى من غير نت"""
+        wiki = self.mem.get("wiki") or {}
+        # لو في كلمة في السؤال مش موجودة في أي مقالة محفوظة — غالبًا اسم علم جديد، والسحابة أدق من التخمين
+        wiki_text = " ".join(wiki.keys())
+        for st in set(stems):
+            if len(st) >= 4 and st not in wiki_text and st not in self.kb.vocab:
+                out["thoughts"].append("كلمة «%s» مش في المومري خالص — ده غالبًا اسم علم جديد، فبشيك على السحابة بدل ما أظلمه بفقرة قريبة بالصدفة." % st)
+                return None
+        # العنوان أولًا: لو كلمة من السؤال اسم مقالة محفوظة — افتتاحيتها أدق إجابة
+        cands = []
+        for st in set(stems):
+            if not st or len(st) < 3 or st in WEB_Q_STOP:
+                continue  # كلمات الاستفهام القصيرة (مين/ايه...) ما تتدورش في العناوين — «مين» جوه «فيتامين»!
+            if st in self.kb.vocab:
+                continue  # كلمة منهجية شائعة (زي «مصر») — بتتجاوب من المنهج مش من ويكي
+            for title, text in wiki.items():
+                tn = normalize(title)
+                t_stems = content_tokens(tn)
+                hit = any(st == t or st == stem(t) for t in t_stems) or (len(st) >= 4 and st in tn)
+                if hit:
+                    cands.append((title, text))
+        if cands:
+            cands.sort(key=lambda c: -len(c[0]))  # العنوان الأطول (الأدق) الأول
+            title, text = cands[0]
+            for p in re.split(r"\n+", str(text)):
+                p = clean_wiki_text(p)
+                if 120 <= len(p) <= 900:
+                    out["thoughts"].append("السؤال عن «%s» — ومقالته محفوظة في المومري، فأجبت من افتتاحيتها." % title)
+                    out["answer"] = p
+                    out["source"] = "ويكيبيديا (محفوظة في المومري)"
+                    out["confidence"] = 0.8
+                    return out
+        pv = self.emb.sentence(stems, self.kb)
+        scored_p = []
+        for title, p, ptoks in self.mem_paras():
+            pst = {stem(t) for t in ptoks}
+            ov = len(qset & pst) / max(2.0, float(len(qset)))
+            if ov >= 0.3:
+                scored_p.append((ov + 0.3 * cosine(pv, self.emb.sentence(sorted(ptoks), self.kb)), ov, title, p))
+        scored_p.sort(key=lambda x: (-x[0], -x[1]))
+        if scored_p and scored_p[0][1] >= 0.4 and len(qset) >= 2:
+            _, ov, title, p = scored_p[0]
+            out["thoughts"].append("لقيت الإجابة في مقالة «%s» المحفوظة في المومري — التداخل %s٪." % (title, to_ar(round(ov * 100))))
+            out["answer"] = clean_wiki_text(p)
+            out["source"] = "ويكيبيديا (محفوظة في المومري)"
+            out["confidence"] = round(min(1.0, ov), 2)
+            return out
+        return None
+
     def check_task(self, lesson_id, part_i, text):
         L = self.kb.lessons.get(lesson_id)
         if not L:
@@ -4632,8 +4926,8 @@ def grade_item(th, q, value):
     if q.get("passage"):
         item["passage"] = q["passage"]
     if q.get("type") == "essay":
-        item.update(th.grade_essay(q, value if isinstance(value, str) else ""))
-        item["given"] = value if isinstance(value, str) and value.strip() else "لم تُجب"
+        item.update({"score": 0.0, "marks": float(q.get("marks", 4)), "given": value if isinstance(value, str) else "",
+                     "feedback": "الأسئلة المقالية اتشالت من الامتحانات — اسأل المساعد الذكي وهو هيرد عليك من المنهج."})
     else:
         item.update(th.grade_objective(q, value))
     item["state"] = "correct" if item["score"] >= item["marks"] else ("partial" if item["score"] > 0 else
@@ -4647,8 +4941,8 @@ def grade_item(th, q, value):
 _BR = {}
 
 
-def browser_start(data_json, model_json=""):
-    """بيجهّز المصحح: بياخد المنهج من المنصة، والشبكة المتدربة لو محفوظة في المتصفح"""
+def browser_start(data_json, model_json="", memory_json=""):
+    """بيجهّز المصحح: المنهج من المنصة + الشبكة المتدربة + المومري (الذاكرة)"""
     cached = None
     if model_json:
         try:
@@ -4656,6 +4950,11 @@ def browser_start(data_json, model_json=""):
         except ValueError:
             cached = None
     g = Grader(data=json.loads(data_json), cached=cached)
+    if memory_json:
+        try:
+            g.thinker.set_memory(json.loads(memory_json))
+        except ValueError:
+            pass
     _BR["g"] = g
     return json.dumps({"ok": True, "trained": g.trained, "model": g.blob}, ensure_ascii=False)
 
@@ -4666,6 +4965,154 @@ def browser_grade(qid, value_json):
     if not q:
         return json.dumps({"error": "السؤال مش موجود"}, ensure_ascii=False)
     return json.dumps(grade_item(g.thinker, q, json.loads(value_json)), ensure_ascii=False)
+
+
+_MEM_CACHE = {}
+_WEB_CACHE = {}
+_UA = {"User-Agent": "EducationalPlatform/1.5 (student learning; python-urllib)"}
+WEB_Q_STOP = set(_n("ايه إيه ما هو هي مين ليه عشان ازاي إزاي امتى فين كام يعني معني معنى تعريف مقصد زي قولة قول شوف بس كده دي اللي في من علي علي عن لما ولا مش اول اخترع مخترع اللي الذي التى التي هو هي اسم حد")).union({stem(w) for w in ("مين", "ايه", "ليه", "ازاي", "امتى", "فين", "كام", "يعني", "معني", "تعريف", "عشان", "مقصد", "اول", "اخترع")}) | {stem(w) for w in ("مين", "ايه", "ليه", "ازاي", "امتى", "فين", "كام", "يعني", "معني", "تعريف", "عشان", "مقصد")}
+
+
+def load_memory_file():
+    """بقرا مومري المساعد من الملف (مرة واحدة)"""
+    if "mem" in _MEM_CACHE:
+        return _MEM_CACHE["mem"]
+    try:
+        with open(MEMORY_FILE, encoding="utf-8") as f:
+            _MEM_CACHE["mem"] = json.load(f)
+    except Exception:
+        _MEM_CACHE["mem"] = {}
+    return _MEM_CACHE["mem"]
+
+
+def clean_wiki_text(t):
+    """تنظيف وسوم ويكيبيديا من النص المعروض للطالب"""
+    t = re.sub(r"\[\[(?:ملف|File|Image):[^\]]*\]\]", " ", t or "")
+    t = re.sub(r"\[\[[^\]|]*\|", "", t or "")
+    t = (t or "").replace("[[", "").replace("]]", "")
+    t = re.sub(r"'{2,}", "", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+_LEARNED = {}
+
+
+def _learn_save(key, item):
+    """الذاكرة بتتعلم من السحابة: الإجابة بتتحفظ في المومري عشان المرة الجاية تبقى متاحة من غير نت"""
+    _LEARNED[key] = item
+    try:
+        m = load_memory_file()
+        learned = m.get("learned", {})
+        if key not in learned:
+            learned[key] = item
+            while len(learned) > 500:  # سقف التعلم الذاتي
+                learned.pop(next(iter(learned)))
+            m["learned"] = learned
+            with open(MEMORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(m, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def web_lookup(question):
+    """التحقق من المعلومة من السحابة: ويكيبيديا العربية مباشرة (لو النت متاح)"""
+    qn = normalize(question)
+    toks = [w for w in qn.split() if w not in WEB_Q_STOP and len(w) >= 2]
+    toks = toks or [w for w in qn.split() if len(w) >= 2]
+    key = " ".join(toks)[:60]
+    if not key:
+        return None
+    if key in _WEB_CACHE:
+        return _WEB_CACHE[key]
+    if key in _LEARNED:
+        _WEB_CACHE[key] = _LEARNED[key]
+        return _LEARNED[key]
+    lv = load_memory_file().get("learned", {}).get(key)
+    if lv:
+        _WEB_CACHE[key] = lv
+        return lv
+    try:
+        import urllib.request
+        import urllib.parse
+        # استراتيجية: جرب العنوان المباشر الأول (الأدق)، وبعدين بحث بأطول كلمتين
+        def direct(t):
+            for i in range(2):
+                try:
+                    u0 = "https://ar.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(t)
+                    d0 = json.load(urllib.request.urlopen(urllib.request.Request(u0, headers=_UA), timeout=8))
+                    ext = (d0.get("extract") or "").strip()
+                    return {"title": d0.get("title") or t, "text": ext} if len(ext) > 80 else None
+                except urllib.error.HTTPError as e:
+                    if e.code == 429 and i == 0:
+                        time.sleep(2)
+                        continue
+                    raise
+                    return None
+        out = None
+        for cand in (key, key[2:] if key.startswith("ال") and len(key) > 4 else None):
+            if cand and out is None:
+                try:
+                    out = direct(cand)
+                except Exception:
+                    out = None
+        if out is None:
+            def related(title, parts):
+                # الكلمة الأخيرة (اللقب غالبًا) هي الفيصل: لازم تكون في العنوان،
+                # والباقي بيدي نقاط إضافية — الترجمات المختلفة (ايزاك/إسحاق) مش مشكلة
+                tn = normalize(title)
+                last = parts[-1] if parts else ""
+                if parts and last not in tn and stem(last) not in tn:
+                    return False
+                hit = sum(1 for p in parts if p in tn or stem(p) in tn)
+                return hit >= 1
+            def search_first(q):
+                u = ("https://ar.wikipedia.org/w/api.php?action=query&format=json&list=search&srlimit=3&srsearch="
+                     + urllib.parse.quote(q))
+                d = json.load(urllib.request.urlopen(urllib.request.Request(u, headers=_UA), timeout=8))
+                hits = d.get("query", {}).get("search", [])
+                qs = q.split()
+                for h in hits:  # أول نتيجة ليها صلة حقيقية بالسؤال
+                    if related(h["title"], qs):
+                        return direct(h["title"])
+                return None
+            uniq = sorted(set(toks), key=len, reverse=True)
+            variants = []
+            if len(uniq) >= 2:
+                variants += [" ".join([uniq[1], uniq[0]]), " ".join([uniq[0], uniq[1]])]  # اللقب الأول والثاني
+            singles = ([toks[-1]] if toks and toks[-1] in uniq[:2] else []) + [t for t in uniq[:2] if toks and t != toks[-1]]
+            variants += singles  # اللقب (آخر كلمة) له الأولوية
+            for q in variants:
+                if not q:
+                    continue
+                try:
+                    out = search_first(q)
+                except urllib.error.HTTPError as e:
+                    if e.code == 429:
+                        time.sleep(2)
+                        try:
+                            out = search_first(q)
+                        except Exception:
+                            out = None
+                    else:
+                        out = None
+                except Exception:
+                    out = None
+                if out:
+                    break
+        _WEB_CACHE[key] = out
+        if out:
+            _learn_save(key, out)  # اتعلمها — المرة الجاية من غير نت
+        return out
+    except Exception:
+        _WEB_CACHE[key] = None
+        return None
+
+
+def browser_ask(question):
+    g = _BR.get("g")
+    if not g:
+        return json.dumps({"error": "المساعد لسه بيتجهز — ثواني وجرب تاني"}, ensure_ascii=False)
+    return json.dumps(g.thinker.ask(str(question)[:500]), ensure_ascii=False)
 
 
 def browser_check(lesson, part, text):
@@ -4736,6 +5183,8 @@ class Handler(SimpleHTTPRequestHandler):
                 sid = self.desk.submit(data)
                 say("  وصل امتحان جديد (%s) — %d سؤال." % (sid, len(data.get("answers", []))))
                 return self.send_json({"id": sid, "status": "queued"})
+            if api == "ask":
+                return self.send_json(self.grader.thinker.ask(str(data.get("q", ""))[:500]))
             if api == "check":
                 r = self.grader.thinker.check_task(str(data.get("lesson")), int(data.get("part", -1)), str(data.get("text", ""))[:4000])
                 return self.send_json(r, 400 if "error" in r else 200)
@@ -4748,72 +5197,35 @@ class Handler(SimpleHTTPRequestHandler):
 # تجربة سريعة للمصحح (python ai_grader.py --test)
 # =====================================================================
 def self_test(grader):
+    """اختبار سريع: الموضوعي بيتصحح، والمساعد بيرد، والمقالي مش موجود في الامتحانات"""
     th = grader.thinker
-    for q in [q for q in grader.kb.questions.values() if q.get("type") == "essay"]:
-        say("\n" + "=" * 70 + "\nسؤال %s: %s" % (q["id"], q["q"]))
-        other = next(x for x in grader.kb.questions.values() if x.get("type") == "essay" and x["id"] != q["id"])
-        tests = [
-            ("الإجابة النموذجية", q["model"]),
-            ("من غير همزات ولا تاء مربوطة", q["model"].replace("أ", "ا").replace("إ", "ا").replace("ة", "ه")),
-            ("بتشكيل", "".join(c + ("\u064e" if c in "بتدلمنر" else "") for c in q["model"])),
-            ("نص الأفكار بس", "، ".join(q["points"][: max(1, len(q["points"]) // 2)])),
-            ("منقول من السؤال", q["q"]),
-            ("إجابة سؤال تاني", other["model"]),
-            ("كلام فاضي", "الدولة الدولة الدولة الدولة مصر مصر مصر"),
-            ("حروف عشوائية", "سيبس بتنتسيب شسيبت لبسل منتلب"),
-            ("لا أعرف", "مش عارف"),
-        ]
-        for name, ans in tests:
-            r = th.grade_essay(q, ans)
-            say("  %-28s ← %s / %s  (الشبكة %s، الثقة %s)" % (name, r["score"], r["marks"], r.get("nn", "-"), r["confidence"]))
+    qs = grader.kb.questions
+    say("\n" + "=" * 70)
+    say("الامتحانات: %s سؤال موضوعي — والمقالي اتشال (%s سؤال مقالي بقوا معرفة للمساعد بس)"
+        % (to_ar(len(qs)), to_ar(grader.kb.n_essay)))
+    full = tried = 0
+    for q in qs.values():
+        a = q.get("answer")
+        if q.get("type") in ("mcq", "tf", "fill") and a is not None:
+            if q["type"] == "fill":
+                a = a[0] if isinstance(a, list) else a
+                if not isinstance(a, str):
+                    continue
+            r = grade_item(th, q, a)
+            tried += 1
+            full += 1 if r["score"] >= r["marks"] else 0
+    say("  عينة الموضوعي: %s من %s إجابة صح اتحسبت الدرجة كاملة" % (to_ar(full), to_ar(tried)))
     deep_self_test(grader)
-    q = next(q for q in grader.kb.questions.values() if q.get("type") == "essay")
-    say("\nخطوات تفكير المصحح في إجابة ناقصة:")
-    for t in th.grade_essay(q, "، ".join(q["points"][:3]))["thoughts"]:
-        say("   - " + t)
+    say("\n" + "=" * 70 + "\nالمساعد الذكي بيرد على أسئلة الطلاب:")
+    for s in ["إيه مقومات نشأة الدولة المصرية؟", "ما هو تعريف الاستعارة؟",
+              "ليه السما زرقا؟", "يعني إيه فيروس؟", "مين هو إيزاك نيوتن؟", "إيه معنى كلمة ديمقراطية؟",
+              "زي المثل: الصبر مفتاح الفرج؟", "سيبس بتنتسيب شسيبت لبسل"]:
+        r = th.ask(s)
+        say("  س: %s" % s)
+        say("  ج: %s" % r["answer"][:220])
+        say("     [الثقة %s٪ — %s — المصدر: %s]"
+            % (to_ar(round(r["confidence"] * 100)), r["lesson"] or "بدون درس", r.get("source", "—")))
 
-
-def explain_word(grader, word):
-    """المصحح بيشرح إزاي بيفهم كلمة: معناها، ضدها، العامية بتاعتها، صيغها، وجملة من المنهج جت فيها"""
-    nw = normalize(word)
-    st = stem(nw)
-    ids = syn_ids(st)
-    say("\n  الكلمة: %s   (بعد التوحيد: %s — أصلها عندي: %s — جذرها: %s)" % (word, nw, st, arabic_root(nw)))
-    term = _TERM.get(st) or _TERM.get(nw)
-    if term:
-        say("  مصطلح ومعناه: %s" % term)
-    if not ids:
-        near = grader.kb.nearest_word(st) if hasattr(grader.kb, "nearest_word") else None
-        say("  الكلمة دي مش في القاموس." + (" أقرب كلمة ليها في المنهج: %s" % near if near else ""))
-        return
-    syn, col = [], []
-    for gi in sorted(ids):
-        for x in ALL_SYN_GROUPS[gi]:
-            if stem(normalize(x)) != st and x not in syn:
-                syn.append(x)
-    ants = []
-    r = ant_of(st)
-    if r:
-        ants = [x for x in ANT_SIDE_WORDS[r[0]][1 - r[1]]]
-    for side_a, side_b, col_a, col_b in LEX_ENTRIES:
-        for side, cl in ((side_a, col_a), (side_b, col_b)):
-            if any(stem(normalize(x)) == st for x in side):
-                col += [c for c in cl if c not in col]
-    say("  معناها (مرادفات): " + "، ".join(syn[:25]))
-    say("  عكسها (أضداد):    " + ("، ".join(ants[:20]) if ants else "مفيش ضد مسجل — مش كل كلمة ليها عكس"))
-    if col:
-        say("  بالعامية المصرية: " + "، ".join(col))
-    forms = [nw, "ال" + nw, "و" + nw, "بال" + nw, "وبال" + nw, nw + "ها", nw + "هم"]
-    ok = [f for f in forms if syn_ids(stem(f)) & ids]
-    say("  بفهمها بأي شكل من دول: " + "، ".join(ok))
-    stems = {stem(normalize(x)) for gi in ids for x in ALL_SYN_GROUPS[gi]}
-    for lid, sent, toks in grader.kb.sentences:
-        if stems & set(toks):
-            say("  جت في المنهج في جملة زي: «%s»" % sent[:160])
-            break
-    if ants:
-        say("  لو الفكرة فيها «%s» والطالب كتب «%s» جنب نفس الموضوع، هعتبر إنه عكس المعنى." % (word, ants[0]))
-    say("  ولو كتب «%s» بدلها، هعتبرها نفس المعنى." % (syn[0] if syn else word))
 
 
 def main():

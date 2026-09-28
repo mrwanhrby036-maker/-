@@ -72,6 +72,7 @@ const SUBJECTS = [
       /* ================= الدرس الأول ================= */
       {
         id: "u1l1",
+          video: { src: "lesson1-video.mp4", poster: "lesson1-video.jpg", title: "فيديو ملخص الدرس (٣ دقائق)", note: "شوف الفيديو الأول عشان تاخد فكرة عن الدرس كله، وبعدين ابدأ الأجزاء." },
         title: "بناء الدولة المصرية واستمرارها عبر التاريخ",
         summary: "الدولة كيان سياسي منظم يقوم على أركان أساسية مترابطة: الشعب، والحيز الجغرافي، والسلطة، والسيادة — ومقومات نشأة الدولة المصرية وعوامل استمرارها عبر الزمن",
         objectives: [
@@ -517,6 +518,7 @@ const SUBJECTS = [
               /* ================= الدرس: مهارات الفهم (الحجاج + المهارات التسع) ================= */
               {
                 id: "ar1",
+                video: { src: "ar1-video.mp4", poster: "ar1-video.jpg", title: "فيديو ملخص الدرس (أقل من ٣ دقائق)", note: "شوف الفيديو الأول عشان تاخد فكرة عن مهارات الفهم كلها، وبعدين ابدأ الأجزاء." },
                 title: "مهارات الفهم",
                 summary: "معنى الحجاج وأنواع الحجج وطرق تحقيق نواتج التعلم، ثم تسع مهارات لفهم النص: الفكرة الرئيسة، والفكرة التي لم ترد، وزاوية الرؤية، ونوع الخطاب، والسياق الاجتماعي، والتدرج، والمعنى والسياق، والرمز، والعنوان",
                 objectives: [
@@ -3399,6 +3401,9 @@ const QUESTIONS = [
       ${crumbs([{ t: l.subject.title, go: ["subject", { id: l.subject.id }] }, ...(l.unit.part ? [{ t: l.unit.part.title, go: partGo(l) }] : []), { t: unitShort(l.unit), go: l.unit.part ? unitGo(l) : ["subject", { id: l.subject.id }] }, { t: l.title }])}
       ${title("book", esc(l.title))}
       <p class="page-sub">${esc(l.summary)}</p>
+      ${l.video ? `<div class="card lesson-video"><h3 class="block-title">${I("play")} ${esc(l.video.title)}</h3>
+        <video controls preload="none" playsinline poster="${esc(l.video.poster)}" src="${esc(l.video.src)}"></video>
+        <p class="video-note">${I("info")} ${esc(l.video.note)}</p></div>` : ""}
       ${(l.objectives || []).length ? `<div class="card"><h3 class="block-title">${I("target")} هتتعلم في الدرس ده</h3><ul class="obj-list">${l.objectives.map((o) => `<li>${esc(o)}</li>`).join("")}</ul></div>` : ""}
       <div data-parts></div>
       <div data-end></div>

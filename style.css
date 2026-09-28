@@ -1089,3 +1089,6 @@ body.exam-mode{background:var(--milk)}
   .tj-prog{margin:4px 0}
   .tj-text{font-size:1.12rem}
 }
+.lesson-video video{width:100%;aspect-ratio:16/9;border-radius:14px;background:#2b1d14;display:block}
+.video-note{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.92rem;margin-top:10px}
+.video-note .i{width:18px;height:18px;flex:none}

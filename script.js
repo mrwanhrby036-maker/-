@@ -1,5 +1,5 @@
 /* #####################################################################
-   منصتي الرقمية — ملف الجافا سكريبت (ملف واحد)
+   روائع العلم — ملف الجافا سكريبت (ملف واحد)
      الجزء ١: الإعدادات والمحتوى (الأقسام ← الوحدات ← الدروس) ← بيتعدل
      الجزء ٢: بنك الأسئلة (الامتحان النهائي لكل درس)          ← بيتعدل
      الجزء ٣: برمجة المنصة                                   ← مش محتاج يتعدل
@@ -11,7 +11,7 @@
    قسم التاريخ: الدرس الأول من كتاب الوزارة «التاريخ الوطني» — قسم اللغة العربية لسه فاضي
    ===================================================================== */
 const SITE = {
-  name: "منصتي الرقمية",
+  name: "روائع العلم",
   tagline: "تعلّم المادة بطريقة تفاعلية ومنظمة",
   competition: "مسابقة «مصر الرقمية» — المرحلة الثانوية ٢٠٢٦",
   subject: "التاريخ",
@@ -1234,6 +1234,7 @@ const SUBJECTS = [
               /* ================= الدرس: مهارات التحليل (المهارات الاثنتا عشرة) ================= */
               {
                 id: "ar2",
+                video: { src: "ar2-video.mp4", poster: "ar2-video.jpg", title: "فيديو ملخص الدرس", note: "شوف الفيديو الأول عشان تاخد فكرة عن مهارات التحليل كلها، وبعدين ابدأ الأجزاء." },
                 title: "مهارات التحليل",
                 summary: "اثنتا عشرة مهارة لتحليل النص الحجاجي: تسلسل الحجة والفِكَر، والحجة الأساسية والداعمة، والحجة العقلانية والعاطفية، ووسائل الإقناع، والفرضيات، وأثر اللغة، والبنية الحجاجية، وأدوات الربط، والثنائيات الضدية، والدلالة الضمنية، والصورة الخيالية، وأثر الأسلوب",
                 objectives: [
@@ -2674,7 +2675,7 @@ const QUESTIONS = [
   const doneCount = () => LESSONS.filter((l) => progress()[l.id]).length;
   const cps = () => store.get("cp", {});
   const cpPassed = (lid, i) => !!(cps()[lid] || {})[i];
-  const setCp = (lid, i) => { const c = cps(); c[lid] = c[lid] || {}; c[lid][i] = true; store.set("cp", c); };
+  const setCp = (lid, i) => { const c = cps(); c[lid] = c[lid] || {}; c[lid][i] = true; store.set("cp", c); setTimeout(updateProg, 50); };
   const partsDone = (l) => l.parts.filter((_, i) => cpPassed(l.id, i)).length;
   const stats = () => store.get("stats", { answered: 0, correct: 0, streak: 0, bestStreak: 0, exams: 0, certs: 0 });
   function recordAnswer(ok) {
@@ -2812,13 +2813,44 @@ const QUESTIONS = [
     if (booted && !REDUCED && SKELETONS[name] && !refresh) {
       $main.innerHTML = `<section class="screen sk-screen" aria-busy="true" aria-label="جاري التحميل">${SKELETONS[name]()}</section>`;
       window.scrollTo(0, 0);
-      setTimeout(() => { if (token !== navToken) return; screens[name](params); window.scrollTo(0, 0); }, 420);
+      setTimeout(() => { if (token !== navToken) return; screens[name](params); window.scrollTo(0, 0); updateProg(); }, 420);
+      updateProg();
       return;
     }
     booted = true;
     screens[name](params);
     window.scrollTo(0, 0);
+    updateProg();
   }
+
+  /* ---------- شريط التقدم الذهبي: بيتملي وانت بتقرأ، وبيقولك خلّصت كام جزء (في الدروس ورحلة عبر الزمن) ---------- */
+  const $prog = document.createElement("div");
+  $prog.className = "read-prog"; $prog.setAttribute("aria-hidden", "true"); $prog.innerHTML = "<i></i>";
+  const $chip = document.createElement("div");
+  $chip.className = "read-chip"; $chip.setAttribute("aria-live", "polite");
+  document.body.append($prog, $chip);
+  function updateProg() {
+    if (!$prog) return;
+    const name = current && current.name, on = name === "lesson" || name === "journey";
+    $prog.classList.toggle("on", on); $chip.classList.toggle("on", name === "lesson");
+    if (!on) return;
+    const h = document.documentElement.scrollHeight - innerHeight;
+    const pct = h > 0 ? Math.min(100, Math.max(0, (scrollY / h) * 100)) : 100;
+    $prog.firstChild.style.width = pct + "%";
+    $prog.classList.toggle("full", pct > 99.5);
+    if (name === "lesson") {
+      const l = lessonById(current.params.id);
+      if (!l) return $chip.classList.remove("on");
+      const n = l.parts.length, d = partsDone(l);
+      $chip.innerHTML = `<strong>تقدّمك في الدرس</strong>
+        <div class="rc-row"><span>${I("book")} القراءة</span><em class="rc-bar"><i style="width:${pct}%"></i></em><small>${ar(Math.round(pct))}٪</small></div>
+        <div class="rc-row"><span>${I("check")} التفاعل</span><em class="rc-bar"><i style="width:${(d / n) * 100}%"></i></em><small>${ar(d)} من ${ar(n)}</small></div>`;
+    }
+  }
+  let progRaf = 0;
+  const progTick = () => { if (!progRaf) progRaf = requestAnimationFrame(() => { progRaf = 0; updateProg(); }); };
+  addEventListener("scroll", progTick, { passive: true });
+  addEventListener("resize", progTick);
 
   /* الإطار المتحرك بتاع القائمة: بيروح عند الزرار اللي عليه الماوس، ولما يسيبه يرجع للصفحة الحالية */
   const $navBox = document.querySelector(".nav-box"), $rect = document.querySelector(".main-nav .rect");

@@ -161,7 +161,7 @@ h1,h2,h3{color:var(--espresso);line-height:1.5}
 /* ---------- التقدم ---------- */
 
 .progress{flex:1;height:10px;background:var(--line);border-radius:10px;overflow:hidden}
-.progress > span{display:block;height:100%;background:linear-gradient(90deg,var(--caramel),var(--coffee));border-radius:10px;transition:width .6s}
+.progress > span{display:block;height:100%;background:linear-gradient(270deg,#b8860b,#d4a017 50%,#f3d27a);box-shadow:0 0 8px rgba(230,180,34,.45);border-radius:10px;transition:width .6s}
 
 /* ---------- الدرس ---------- */
 
@@ -1092,3 +1092,50 @@ body.exam-mode{background:var(--milk)}
 .lesson-video video{width:100%;aspect-ratio:16/9;border-radius:14px;background:#2b1d14;display:block}
 .video-note{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.92rem;margin-top:10px}
 .video-note .i{width:18px;height:18px;flex:none}
+
+/* =========================================================
+   شريط التقدم الذهبي (القراءة والتفاعل)
+   ========================================================= */
+.read-prog{position:fixed;top:0;right:0;left:0;height:7px;z-index:60;background:rgba(212,160,23,.22);opacity:0;pointer-events:none;transition:opacity .3s}
+.read-prog.on{opacity:1}
+.read-prog i{display:block;height:100%;width:0;margin-inline-start:0;border-radius:0 0 0 6px;background:linear-gradient(270deg,#b8860b,#d4a017 45%,#f3d27a);box-shadow:0 0 10px rgba(230,180,34,.65);transition:width .15s linear}
+.read-prog.full i{animation:goldGlow 1.4s ease-in-out infinite}
+@keyframes goldGlow{50%{box-shadow:0 0 18px rgba(243,210,122,.95)}}
+.read-chip{position:fixed;bottom:18px;left:18px;z-index:55;width:250px;max-width:calc(100% - 36px);padding:10px 14px;border-radius:14px;background:var(--foam);border:1.5px solid #e6c46a;box-shadow:0 8px 22px rgba(91,63,44,.16);color:var(--espresso);font-size:.84rem;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .3s,transform .3s}
+.read-chip.on{opacity:1;transform:none}
+.read-chip strong{display:block;margin-bottom:6px;color:#9a7209;font-size:.86rem}
+.read-chip .rc-row{display:flex;align-items:center;gap:8px;margin-top:5px}
+.read-chip .rc-row span{display:inline-flex;align-items:center;gap:4px;width:68px;font-weight:700;white-space:nowrap}
+.read-chip .rc-row small{min-width:44px;text-align:left;font-weight:700;color:#9a7209}
+.read-chip .i{width:15px;height:15px;color:#b8860b}
+.read-chip .rc-bar{flex:1;height:8px;border-radius:8px;background:rgba(212,160,23,.18);overflow:hidden}
+.read-chip .rc-bar i{display:block;height:100%;background:linear-gradient(270deg,#b8860b,#d4a017 50%,#f3d27a);border-radius:8px;transition:width .4s ease}
+body.exam-mode .read-prog,body.exam-mode .read-chip{display:none}
+[data-theme="dark"] .read-chip{background:#2f241c;border-color:#b8860b;color:#f0e2d0}
+[data-theme="dark"] .read-chip strong,[data-theme="dark"] .read-chip small{color:#f3d27a}
+@media (max-width:640px){.read-chip{left:10px;bottom:10px;width:220px;font-size:.78rem;padding:8px 10px}}
+@media print{.read-prog,.read-chip{display:none}}
+
+/* ===== أيقونات واتساب ويوتيوب (تصميم المستخدم كما هو، محصور جوه .footer-whatsapp) ===== */
+.footer-whatsapp{display:flex;justify-content:center;align-items:center;gap:34px;margin:10px auto 0;padding:10px 0 40px}
+body.exam-mode .footer-whatsapp{display:none}
+@media print{.footer-whatsapp{display:none}}
+.footer-whatsapp .whatsapp-icon-wrapper{position:relative;display:block;width:60px;height:60px;cursor:pointer;transition:transform .25s;text-decoration:none}
+.footer-whatsapp .whatsapp-icon-wrapper:hover{transform:scale(1.05)}
+.footer-whatsapp .icon-shadow{position:absolute;inset:0;border-radius:42% 58% 38% 62% / 48% 44% 56% 52%;background:radial-gradient(circle at 30% 30%,rgba(37,211,102,.25),transparent 70%);filter:blur(8px);animation:float-shadow 6s infinite alternate}
+.footer-whatsapp .whatsapp-icon{position:relative;width:100%;height:100%;background:radial-gradient(circle at 25% 20%,#4cda64,#1fa755 75%,#128c7e);border-radius:42% 58% 38% 62% / 48% 44% 56% 52%;box-shadow:0 10px 15px -5px rgba(0,0,0,.6),inset 0 4px 5px rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;animation:icon-float 6s infinite alternate;border:1px solid rgba(255,255,255,.1)}
+.footer-whatsapp .youtube-shadow{background:radial-gradient(circle at 30% 30%,rgba(255,0,0,.28),transparent 70%)}
+.footer-whatsapp .youtube-icon{background:radial-gradient(circle at 25% 20%,#ff5252,#e02020 75%,#a80f0f)}
+.footer-whatsapp .glass-reflection{position:absolute;top:8%;left:12%;width:45%;height:22%;background:radial-gradient(circle,rgba(255,255,255,.65) 0%,rgba(255,255,255,.1) 80%);border-radius:50%;filter:blur(2px);transform:rotate(-12deg);opacity:.8;pointer-events:none}
+.footer-whatsapp .phone-icon{position:relative;width:55%;height:55%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}
+.footer-whatsapp .phone-svg{width:100%;height:100%;fill:#fff}
+@keyframes icon-float{0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-3px) rotate(1deg)}100%{transform:translateY(1px) rotate(-.5deg)}}
+@keyframes float-shadow{0%{opacity:.5;transform:translateY(2px) scale(.98)}100%{opacity:.8;transform:translateY(-2px) scale(1.02)}}
+.footer-whatsapp .inner-glow{position:absolute;bottom:15%;left:20%;width:60%;height:18%;background:radial-gradient(ellipse at center,rgba(255,255,255,.2) 0%,transparent 70%);border-radius:50%;filter:blur(3px);opacity:.7}
+.footer-whatsapp .signal-dots{position:absolute;top:30%;right:18%;display:flex;gap:2px;opacity:0;transition:opacity .3s}
+.footer-whatsapp .whatsapp-icon-wrapper:hover .signal-dots{opacity:.9}
+.footer-whatsapp .dot{width:3px;height:3px;background:#fff;border-radius:50%;animation:pulse-dot 1.4s infinite}
+.footer-whatsapp .dot:nth-child(2){animation-delay:.2s;width:4px;height:4px}
+.footer-whatsapp .dot:nth-child(3){animation-delay:.4s;width:2px;height:2px}
+@keyframes pulse-dot{0%,100%{opacity:.4}50%{opacity:1;background:#e0ffe0}}
+.footer-whatsapp .caption{color:#aebac1;font-size:.7rem;text-transform:uppercase;margin-top:4px;text-align:center}

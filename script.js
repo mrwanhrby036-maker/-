@@ -504,6 +504,12 @@ const SUBJECTS = [
           ],
           motto: "من عرف تاريخه.. عرف طريقه",
         },
+        // ملف الدرس على جوجل درايف (بيظهر بعد النجاح في الامتحان النهائي)
+        download: {
+          file: "https://drive.google.com/uc?export=download&id=1yXADl_CWSlUNomP6HLGE2XGtgJ_26B1z",
+          title: "ملف الدرس: بناء الدولة المصرية واستمرارها عبر التاريخ",
+          desc: "مرفوع على جوجل درايف — اضغط «تحميل» في النص",
+        },
       },
     ],
   },

@@ -527,7 +527,73 @@ textarea.input{min-height:80px;resize:vertical}
 .lesson-row > .i{color:var(--caramel)}
 .lesson-row.done .num-badge{background:var(--ok);color:#fff}
 
-.site-foot{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:.9rem;line-height:1.9}
+.site-foot{margin-top:40px;padding:26px 18px 22px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:.9rem;line-height:1.9}
+.foot-brand{font-weight:800;color:var(--espresso);font-size:1.05rem;letter-spacing:.2px}
+
+/* ===== فاصل مزخرف (خط — نجمة — خط) ===== */
+.foot-rule{display:flex;align-items:center;justify-content:center;gap:10px;max-width:230px;margin:10px auto}
+.foot-rule span{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--caramel))}
+.foot-rule span:last-child{background:linear-gradient(270deg,transparent,var(--caramel))}
+.foot-rule b{color:var(--caramel);font-size:.85rem;line-height:1;animation:dev-twinkle 3.4s ease-in-out infinite}
+.foot-rule.bottom{margin:16px auto 0;max-width:120px;opacity:.7}
+@keyframes dev-twinkle{0%,100%{opacity:.45;transform:scale(.82) rotate(0)}50%{opacity:1;transform:scale(1.12) rotate(90deg)}}
+.foot-label{font-size:.76rem;font-weight:700;letter-spacing:2.5px;color:var(--caramel);text-transform:uppercase;margin-top:2px}
+
+/* ===== بطاقات المطورين — تصميم مميز (مختلف عن كروت الدروس) ===== */
+.devs{position:relative;display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;gap:18px;margin-top:18px;perspective:800px}
+.devs::before{content:"";position:absolute;inset:-16px -30px;z-index:0;pointer-events:none;border-radius:40px;background:radial-gradient(ellipse at 50% 45%,rgba(184,138,98,.20),transparent 72%)}
+
+.dev{position:relative;z-index:1;min-width:196px;padding:20px 28px 18px;border-radius:26px 18px 26px 18px;border:1px solid var(--line);background:
+    radial-gradient(130% 90% at 50% 0%,rgba(255,255,255,.55),transparent 60%),
+    linear-gradient(165deg,var(--foam),var(--milk));
+  box-shadow:var(--shadow),0 0 0 5px rgba(255,255,255,.28),inset 0 1px 0 rgba(255,255,255,.7);
+  overflow:hidden;transition:transform .32s cubic-bezier(.2,.8,.3,1),box-shadow .32s}
+.dev:hover{transform:translateY(-5px) rotate(-.6deg);box-shadow:var(--shadow),0 0 0 5px rgba(255,255,255,.4),0 14px 26px -12px rgba(91,63,44,.4)}
+
+/* خط لامع يعدّي على الكارت (مؤخر بين الكارتين) */
+.dev::before{content:"";position:absolute;top:-30%;left:-70%;width:44%;height:160%;z-index:2;pointer-events:none;transform:skewX(-18deg);background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);animation:dev-shine 4.6s ease-in-out infinite;animation-delay:calc(var(--i,0)*1.3s)}
+@keyframes dev-shine{0%,58%{left:-70%}100%{left:135%}}
+
+/* نقشة نقط خفيفة في خلفية الكارت */
+.dev::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.45;background-image:radial-gradient(var(--latte) 1px,transparent 1.2px);background-size:12px 12px;
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 25%,transparent 75%);mask-image:radial-gradient(circle at 50% 50%,#000 25%,transparent 75%)}
+.dev>*{position:relative;z-index:1}
+
+/* معيّنات الزوايا (اللمسة المزخرفة الأساسية) */
+.dev-orn{position:absolute;z-index:1;width:8px;height:8px;background:linear-gradient(135deg,var(--caramel),var(--coffee));opacity:.5;transform:rotate(45deg);transition:opacity .3s,transform .3s}
+.dev:hover .dev-orn{opacity:.9;transform:rotate(225deg) scale(1.25)}
+.dev-orn.o1{top:11px;left:11px}
+.dev-orn.o2{top:11px;right:11px}
+.dev-orn.o3{bottom:11px;left:11px}
+.dev-orn.o4{bottom:11px;right:11px}
+
+.dev-name{font-weight:800;color:var(--espresso);font-size:1.08rem;line-height:1.5;word-break:break-word;text-shadow:0 1px 0 rgba(255,255,255,.55)}
+.dev-role{display:inline-flex;align-items:center;gap:7px;margin-top:9px;padding:4px 13px;border-radius:999px;background:linear-gradient(135deg,var(--milk),var(--foam));border:1px solid var(--line);color:var(--coffee);font-size:.78rem;font-weight:700;direction:ltr;line-height:1.6;box-shadow:inset 0 1px 2px rgba(255,255,255,.6)}
+.dev-role .i{width:15px;height:15px;stroke-width:2.1}
+
+/* الوضع الليلي: الكروت تغمق والتوهج يتحوّل لبني فاتح */
+[data-theme="dark"] .devs::before{background:radial-gradient(ellipse at 50% 45%,rgba(194,154,116,.20),transparent 72%)}
+[data-theme="dark"] .dev{background:
+    radial-gradient(130% 90% at 50% 0%,rgba(255,255,255,.07),transparent 60%),
+    linear-gradient(165deg,var(--foam),var(--milk));
+  box-shadow:var(--shadow),0 0 0 5px rgba(255,255,255,.04),inset 0 1px 0 rgba(255,255,255,.09)}
+[data-theme="dark"] .dev:hover{box-shadow:var(--shadow),0 0 0 5px rgba(194,154,116,.16),0 14px 26px -12px rgba(0,0,0,.6)}
+[data-theme="dark"] .dev-name{text-shadow:0 1px 0 rgba(0,0,0,.35)}
+[data-theme="dark"] .dev-role{box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+[data-theme="dark"] .dev::after{opacity:.32}
+
+/* الموبايل: الكروت تاخد عرض الشاشة */
+@media (max-width:560px){
+  .devs{gap:14px}
+  .dev{min-width:0;width:100%;max-width:320px;padding:18px 20px 16px}
+}
+/* احترام إعداد تقليل الحركة */
+@media (prefers-reduced-motion:reduce){
+  .dev::before{animation:none;display:none}
+  .foot-rule b{animation:none}
+  .dev:hover{transform:none}
+}
+
 [data-parts] > div{margin-top:22px}
 
 @media (max-width:640px){
@@ -799,6 +865,17 @@ textarea.input{min-height:80px;resize:vertical}
 .exam-state.wait .i{animation:pulse 1.6s ease-in-out infinite}
 
 body.exam-mode{background:var(--milk)}
+/* شريط الامتحان في أول الدرس — إتاحة سريعة من غير ما تخلّص الأجزاء */
+.exam-jump{display:flex;align-items:center;gap:14px;padding:14px 20px;margin:0 0 20px;background:
+    linear-gradient(135deg,var(--foam),var(--milk));border:1px solid var(--line);
+  border-right:5px solid var(--coffee);box-shadow:var(--shadow)}
+.exam-jump.wait{border-right-color:var(--caramel)}
+.exam-jump>.i{width:26px;height:26px;color:var(--coffee);flex:none}
+.exam-jump.wait>.i{color:var(--caramel)}
+.exam-jump b{display:block;color:var(--espresso);font-size:.98rem;line-height:1.6}
+.exam-jump small{display:block;color:var(--muted);font-size:.8rem;line-height:1.7}
+.exam-jump .btn{flex:none}
+@media (max-width:560px){.exam-jump{flex-wrap:wrap}.exam-jump .btn{width:100%}}
 .exam-head{display:flex;align-items:flex-start;gap:16px;background:var(--foam);border:1px solid var(--line);border-radius:var(--radius);
   box-shadow:var(--shadow);padding:18px 22px;margin:8px 0 22px;border-top:5px solid var(--coffee)}
 .exam-head small{color:var(--muted)}
@@ -1118,7 +1195,8 @@ body.exam-mode .read-prog,body.exam-mode .read-chip{display:none}
 
 /* ===== أيقونات واتساب ويوتيوب (تصميم المستخدم كما هو، محصور جوه .footer-whatsapp) ===== */
 .footer-whatsapp{display:flex;justify-content:center;align-items:center;gap:34px;margin:10px auto 0;padding:10px 0 40px}
-body.exam-mode .footer-whatsapp{display:none}
+/* أيقونات التواصل: في الصفحة الرئيسية بس — جوّه الدرس أو الامتحان مش بتظهر */
+body:not(.home-mode) .footer-whatsapp{display:none}
 @media print{.footer-whatsapp{display:none}}
 .footer-whatsapp .whatsapp-icon-wrapper{position:relative;display:block;width:60px;height:60px;cursor:pointer;transition:transform .25s;text-decoration:none}
 .footer-whatsapp .whatsapp-icon-wrapper:hover{transform:scale(1.05)}
@@ -1126,6 +1204,17 @@ body.exam-mode .footer-whatsapp{display:none}
 .footer-whatsapp .whatsapp-icon{position:relative;width:100%;height:100%;background:radial-gradient(circle at 25% 20%,#4cda64,#1fa755 75%,#128c7e);border-radius:42% 58% 38% 62% / 48% 44% 56% 52%;box-shadow:0 10px 15px -5px rgba(0,0,0,.6),inset 0 4px 5px rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;animation:icon-float 6s infinite alternate;border:1px solid rgba(255,255,255,.1)}
 .footer-whatsapp .youtube-shadow{background:radial-gradient(circle at 30% 30%,rgba(255,0,0,.28),transparent 70%)}
 .footer-whatsapp .youtube-icon{background:radial-gradient(circle at 25% 20%,#ff5252,#e02020 75%,#a80f0f)}
+/* TikTok: خلفية سوداء + نوتة musically بثلاث طبقات (سماوي/وردي/أبيض) زي شعار تيك توك
+   ملاحظة: نقطة زيادة (class) إضافية عن قواعد واتساب/يوتيوب عشان تتغلب عليها
+   حتى لو ترتيب الملف اتغيّر — مش تعتمد على إن القواعد دي بعد اللي قبلها */
+.footer-whatsapp .icon-shadow.tiktok-shadow{background:radial-gradient(circle at 30% 30%,rgba(37,244,238,.30),rgba(254,44,85,.22) 62%,transparent 78%)}
+.footer-whatsapp .whatsapp-icon.tiktok-icon{background:radial-gradient(circle at 25% 20%,#2e2e2e,#151515 72%,#000)}
+.footer-whatsapp .phone-icon.tiktok-note{width:62%;height:62%}
+.footer-whatsapp .tiktok-note .phone-svg{width:100%;height:100%;fill:none}
+.footer-whatsapp .tiktok-note .phone-svg path{stroke:none;transform:translate(-1.5px,-.5px)}
+.footer-whatsapp .tiktok-note .phone-svg .tk-cy{fill:#25F4EE}
+.footer-whatsapp .tiktok-note .phone-svg .tk-rd{fill:#FE2C55;transform:translate(1.5px,.5px)}
+.footer-whatsapp .tiktok-note .phone-svg .tk-wt{fill:#fff;transform:none}
 .footer-whatsapp .glass-reflection{position:absolute;top:8%;left:12%;width:45%;height:22%;background:radial-gradient(circle,rgba(255,255,255,.65) 0%,rgba(255,255,255,.1) 80%);border-radius:50%;filter:blur(2px);transform:rotate(-12deg);opacity:.8;pointer-events:none}
 .footer-whatsapp .phone-icon{position:relative;width:55%;height:55%;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}
 .footer-whatsapp .phone-svg{width:100%;height:100%;fill:#fff}

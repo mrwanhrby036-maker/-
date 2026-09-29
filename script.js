@@ -507,8 +507,10 @@ const SUBJECTS = [
         // ملف الدرس على جوجل درايف (بيظهر بعد النجاح في الامتحان النهائي)
         download: {
           file: "https://drive.google.com/uc?export=download&id=1yXADl_CWSlUNomP6HLGE2XGtgJ_26B1z",
-          title: "ملف الدرس: بناء الدولة المصرية واستمرارها عبر التاريخ",
-          desc: "مرفوع على جوجل درايف — اضغط «تحميل» في النص",
+          alt: "https://drive.google.com/file/d/1yXADl_CWSlUNomP6HLGE2XGtgJ_26B1z/view?usp=sharing",
+          name: "كتاب-الوزارة.pdf",
+          title: "ملف كتاب الوزارة",
+          desc: "كتاب الوزارة — الدرس الأول: بناء الدولة المصرية واستمرارها عبر التاريخ",
         },
       },
     ],
@@ -3198,7 +3200,8 @@ const QUESTIONS = [
       ${c.motto ? `<blockquote class="closing-motto">«${esc(c.motto)}»</blockquote>` : ""}
       ${c.text.slice(2).map((t) => `<p class="closing-sign">${esc(t)}</p>`).join("")}` : ""}
       ${d ? `<div class="dl-box" data-dl>
-        <div class="dl-info">${I("file")}<div><b>${esc(d.title)}</b><small>${esc(d.desc)}</small></div></div>
+        <div class="dl-info">${I("file")}<div><b>${esc(d.title)}</b><small>${esc(d.desc)}</small>
+          ${d.alt ? `<a class="dl-alt" href="${esc(d.alt)}" target="_blank" rel="noopener">${I("link")} لو التحميل ما اشتغلش، افتح الملف من جوجل درايف</a>` : ""}</div></div>
         <div class="dl-container">
           <label class="dl-label" title="تحميل الملف">
             <input type="checkbox" class="dl-input" aria-label="تحميل ${esc(d.title)}">
@@ -3218,8 +3221,14 @@ const QUESTIONS = [
       if (!navigator.onLine) return toast("محتاج تكون متصل بالإنترنت عشان تحمّل الملف");
       sfx.pop();
       const a = document.createElement("a");
-      a.href = d.file; a.target = "_blank"; a.rel = "noopener";
-      document.body.appendChild(a); a.click(); a.remove();
+      a.href = d.file; a.target = "_blank"; a.rel = "noopener noreferrer";
+      if (d.name) a.download = d.name;          // بيساعد لو الملف على نفس الدومين
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 1500);
+      // جوجل درايف ساعات بيرجّع صفحة بدل الملف — بنقول للمستخدم الخطوة الجاية
+      toast("بنفتح الملف… لو مشتحمّلش فورًا، استنى ثانية أو استخدم لينك درايف تحت");
     };
     lab.addEventListener("click", (e) => {
       if (e.target === inp) return;

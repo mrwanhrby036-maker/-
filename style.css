@@ -783,6 +783,12 @@ textarea.input{min-height:80px;resize:vertical}
 .dl-info>.i{width:34px;height:34px;color:var(--coffee);flex-shrink:0}
 .dl-info b{display:block;color:var(--espresso)}
 .dl-info small{color:var(--muted)}
+/* لينك بديل: لو التحميل المباشر من درايف ما اشتغلش، افتح الملف من صفحة درايف */
+.dl-alt{display:inline-flex;align-items:center;gap:6px;margin-top:7px;padding:4px 11px;border-radius:999px;
+  background:var(--milk);border:1px solid var(--line);color:var(--coffee);font-size:.76rem;font-weight:600;
+  line-height:1.7;text-decoration:none;transition:background .2s,transform .2s}
+.dl-alt:hover{background:var(--latte);transform:translateY(-1px)}
+.dl-alt .i{width:14px;height:14px;stroke-width:2.1;flex:none}
 
 /* ===================== زرار تحميل الملف (تحميل ← حركة ← فتح) ===================== */
 .dl-container{display:flex;justify-content:center;align-items:center;direction:ltr;min-width:160px}

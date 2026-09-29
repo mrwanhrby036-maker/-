@@ -13,7 +13,6 @@
 const SITE = {
   name: "روائع العلم",
   tagline: "تعلّم المادة بطريقة تفاعلية ومنظمة",
-  competition: "مسابقة «مصر الرقمية» — المرحلة الثانوية ٢٠٢٦",
   subject: "التاريخ",
   grade: "الصف الثاني الثانوي",
 
@@ -30,6 +29,13 @@ const SITE = {
     governorate: "أسيوط",
     teacher: "..............................",
   },
+
+  // أسماء مطوّري المنصة (بتظهر في ذيل الصفحة الرئيسية)
+  // name = الاسم، role = الدور، icon = أيقونة SVG من ICONS
+  developers: [
+    { name: "𝗠𝗮𝗿�𝘂", role: "Web Developer", icon: "code" },
+    { name: "HAZEM", role: "ETHICAL_HACKER", icon: "terminal" },
+  ],
 
 };
 
@@ -497,6 +503,14 @@ const SUBJECTS = [
             "صُممت هذه المنصة بيد طالب مصري، إيمانًا بأن التعلّم الرقمي هو طريقنا إلى «مصر الرقمية».",
           ],
           motto: "من عرف تاريخه.. عرف طريقه",
+        },
+        // ملف الدرس على جوجل درايف (بيظهر بعد النجاح في الامتحان النهائي)
+        download: {
+          file: "https://drive.google.com/uc?export=download&id=1yXADl_CWSlUNomP6HLGE2XGtgJ_26B1z",
+          alt: "https://drive.google.com/file/d/1yXADl_CWSlUNomP6HLGE2XGtgJ_26B1z/view?usp=sharing",
+          name: "كتاب-الوزارة.pdf",
+          title: "ملف كتاب الوزارة",
+          desc: "كتاب الوزارة — الدرس الأول: بناء الدولة المصرية واستمرارها عبر التاريخ",
         },
       },
     ],
@@ -2804,6 +2818,8 @@ const QUESTIONS = [
     const full = name === "bye", locked = name === "exam";
     $top.classList.toggle("hidden", full || locked);
     document.body.classList.toggle("exam-mode", locked);
+    // أيقونات التواصل (واتساب/يوتيوب/تيك توك) في الصفحة الرئيسية بس
+    document.body.classList.toggle("home-mode", name === "home");
     $main.style.maxWidth = full ? "none" : "";
     $main.style.padding = full ? "0" : "";
     setNav(NAV_OF[name]);
@@ -3082,7 +3098,21 @@ const QUESTIONS = [
         </button>`; }).join("")}
       </div>
 
-      <footer class="site-foot">${esc(SITE.name)} — إعداد الطالب: ${esc(SITE.student.name)} — ${esc(SITE.student.school)}<br>${esc(SITE.competition)} • HTML — CSS — JavaScript</footer>`);
+      <footer class="site-foot">
+        <div class="foot-brand">${esc(SITE.name)}</div>
+        <div class="foot-rule" aria-hidden="true"><span></span><b>✦</b><span></span></div>
+        <div class="foot-label">تطوير المنصة</div>
+        <div class="devs">${SITE.developers.map((d, i) => `
+          <div class="dev" style="--i:${i}">
+            <span class="dev-orn o1" aria-hidden="true"></span>
+            <span class="dev-orn o2" aria-hidden="true"></span>
+            <span class="dev-orn o3" aria-hidden="true"></span>
+            <span class="dev-orn o4" aria-hidden="true"></span>
+            <div class="dev-name">${esc(d.name)}</div>
+            <div class="dev-role">${I(d.icon)}<span>${esc(d.role)}</span></div>
+          </div>`).join("")}</div>
+        <div class="foot-rule bottom" aria-hidden="true"><span></span><b>✦</b><span></span></div>
+      </footer>`);
     $$("[data-subject]").forEach((b) => (b.onclick = () => { sfx.click(); go("subject", { id: b.dataset.subject }); }));
     if (last) $("[data-cont]").onclick = () => { sfx.click(); go("lesson", { id: last.id }); };
   };
@@ -3170,7 +3200,8 @@ const QUESTIONS = [
       ${c.motto ? `<blockquote class="closing-motto">«${esc(c.motto)}»</blockquote>` : ""}
       ${c.text.slice(2).map((t) => `<p class="closing-sign">${esc(t)}</p>`).join("")}` : ""}
       ${d ? `<div class="dl-box" data-dl>
-        <div class="dl-info">${I("file")}<div><b>${esc(d.title)}</b><small>${esc(d.desc)}</small></div></div>
+        <div class="dl-info">${I("file")}<div><b>${esc(d.title)}</b><small>${esc(d.desc)}</small>
+          ${d.alt ? `<a class="dl-alt" href="${esc(d.alt)}" target="_blank" rel="noopener">${I("link")} لو التحميل ما اشتغلش، افتح الملف من جوجل درايف</a>` : ""}</div></div>
         <div class="dl-container">
           <label class="dl-label" title="تحميل الملف">
             <input type="checkbox" class="dl-input" aria-label="تحميل ${esc(d.title)}">
@@ -3190,8 +3221,14 @@ const QUESTIONS = [
       if (!navigator.onLine) return toast("محتاج تكون متصل بالإنترنت عشان تحمّل الملف");
       sfx.pop();
       const a = document.createElement("a");
-      a.href = d.file; a.target = "_blank"; a.rel = "noopener";
-      document.body.appendChild(a); a.click(); a.remove();
+      a.href = d.file; a.target = "_blank"; a.rel = "noopener noreferrer";
+      if (d.name) a.download = d.name;          // بيساعد لو الملف على نفس الدومين
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 1500);
+      // جوجل درايف ساعات بيرجّع صفحة بدل الملف — بنقول للمستخدم الخطوة الجاية
+      toast("بنفتح الملف… لو مشتحمّلش فورًا، استنى ثانية أو استخدم لينك درايف تحت");
     };
     lab.addEventListener("click", (e) => {
       if (e.target === inp) return;
@@ -3202,6 +3239,19 @@ const QUESTIONS = [
       sfx.click();
       setTimeout(() => { lab.classList.add("done"); lab.title = "فتح الملف"; }, 3600);
     });
+  }
+
+  /* ---------- شريط الامتحان في أول الدرس (إتاحة سريعة من غير ما تخلّص الأجزاء) ---------- */
+  function examJump(l) {
+    const qs = qOf(l.id), e = examOf(l.id);
+    if (!qs.length) return "";
+    if (examPending(e)) return `<div class="card exam-jump wait">${I("brain")}<div class="grow"><b>إجاباتك عند المصحح</b><small>بيراجعها دلوقتي — اضغط عشان تتابع النتيجة</small></div>
+      <button class="btn soft small" data-exstatus>${I("eye")} متابعة التصحيح</button></div>`;
+    const done = e && e.status === "done";
+    return `<div class="card exam-jump">${I("pencil")}<div class="grow">
+        <b>${done ? `آخر نتيجة: ${num(e.score)} من ${num(e.total)} (${ar(e.percent)}٪)` : `الامتحان النهائي — ${qWord(qs.length)}`}</b>
+        <small>${done ? (e.passed ? "ناجح — برافو عليك! ملخص الدرس والخاتمة تحت." : "محتاج ٥٠٪ عشان تنجح — راجع الدرس وجرّب تاني") : "مستعد؟ ابدأ الامتحان في أي وقت — مش لازم تخلّص الأجزاء الأول"}</small></div>
+      <button class="btn small" data-ex${done ? "status" : "start"}>${done ? `${I("list")} تفاصيل النتيجة` : `${I("play")} ابدأ الامتحان`}</button></div>`;
   }
 
   /* ---------- كارت الامتحان النهائي في آخر الدرس ---------- */
@@ -3426,8 +3476,10 @@ const QUESTIONS = [
   };
 
   screens.lesson = ({ id }) => {
-    const l = lessonById(id), idx = LESSONS.indexOf(l), n = l.parts.length;
-    const prevL = LESSONS[idx - 1], nextL = LESSONS[idx + 1];
+    const l = lessonById(id), n = l.parts.length;
+    // التالي/السابق جوّه نفس القسم بس — عشان ما ينقلش الطالب من التاريخ للعربي
+    const sib = subjectLessons(l.subject), si = sib.indexOf(l);
+    const prevL = sib[si - 1], nextL = sib[si + 1];
     store.set("last", id);
     render(`
       ${crumbs([{ t: l.subject.title, go: ["subject", { id: l.subject.id }] }, ...(l.unit.part ? [{ t: l.unit.part.title, go: partGo(l) }] : []), { t: unitShort(l.unit), go: l.unit.part ? unitGo(l) : ["subject", { id: l.subject.id }] }, { t: l.title }])}
@@ -3437,6 +3489,7 @@ const QUESTIONS = [
         <video controls preload="none" playsinline poster="${esc(l.video.poster)}" src="${esc(l.video.src)}"></video>
         <p class="video-note">${I("info")} ${esc(l.video.note)}</p></div>` : ""}
       ${(l.objectives || []).length ? `<div class="card"><h3 class="block-title">${I("target")} هتتعلم في الدرس ده</h3><ul class="obj-list">${l.objectives.map((o) => `<li>${esc(o)}</li>`).join("")}</ul></div>` : ""}
+      ${examJump(l)}
       <div data-parts></div>
       <div data-end></div>
       <div class="step-nav">
@@ -3445,6 +3498,10 @@ const QUESTIONS = [
       </div>`);
     bindCrumbs();
     $$("[data-lesson]").forEach((b) => (b.onclick = () => { sfx.click(); go("lesson", { id: b.dataset.lesson }); }));
+    // أزرار شريط الامتحان في أول الدرس
+    const $exs = $("[data-exstart]", $main), $exv = $("[data-exstatus]", $main);
+    if ($exs) $exs.onclick = () => { sfx.click(); go("exam", { id: l.id }); };
+    if ($exv) $exv.onclick = () => { sfx.click(); go("examStatus", { id: l.id }); };
 
     const $parts = $("[data-parts]"), $end = $("[data-end]");
     let opening = true; // وقت فتح الصفحة: الأجزاء المحلولة قبل كده بتظهر من غير ما الصفحة تنزل
@@ -3752,7 +3809,8 @@ const QUESTIONS = [
   }
 
   screens.examStatus = ({ id }) => {
-    const l = lessonById(id), idx = LESSONS.indexOf(l), nextL = LESSONS[idx + 1];
+    const l = lessonById(id);
+    const sib = subjectLessons(l.subject), nextL = sib[sib.indexOf(l) + 1];
     render(`
       ${crumbs([{ t: l.subject.title, go: ["subject", { id: l.subject.id }] }, { t: l.title, go: ["lesson", { id }] }, { t: "نتيجة الامتحان" }])}
       ${title("sparkle", "نتيجة الامتحان النهائي")}

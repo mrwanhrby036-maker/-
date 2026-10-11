@@ -516,8 +516,7 @@ const SUBJECTS = [
       /* ================= الدرس الثاني ================= */
       {
         id: "u1l2",
-        // فيديو ملخص الدرس (لسه محتاج ملف الفيديو) — لما يجهز ضيف هنا:
-        // video: { src: "lesson2-video.mp4", poster: "lesson2-video.jpg", title: "فيديو ملخص الدرس", note: "شوف الفيديو الأول عشان تاخد فكرة عن الدرس كله، وبعدين ابدأ الأجزاء." },
+        video: { src: "https://youtu.be/Zq843eKqhQI", title: "فيديو ملخص الدرس", note: "شوف الفيديو الأول عشان تاخد فكرة عن الدرس كله، وبعدين ابدأ الأجزاء." },
         title: "الدولة المصرية القديمة ومقاومة الاحتلال",
         summary: "الموقع الجغرافي لمصر ومواردها الاقتصادية كانا سلاحًا ذا حدين: جعلاها محورًا استراتيجيًا في العالم القديم، وفي الوقت نفسه هدفًا لأطماع قوى الاحتلال — من الهكسوس إلى الفرس والإسكندر والبطالمة والرومان — ومقاومة المصريين لهم عبر العصور",
         objectives: [
@@ -4262,6 +4261,11 @@ const QUESTIONS = [
     }
   };
 
+  // لو الفيديو على يوتيوب بنحوّل الرابط لرابط تضمين (embed)، غير كده بنرجع null ويتعرض ملف الفيديو العادي
+  const youtubeEmbed = (url) => {
+    const m = String(url || "").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+    return m ? `https://www.youtube-nocookie.com/embed/${m[1]}` : null;
+  };
   screens.lesson = ({ id }) => {
     const l = lessonById(id), n = l.parts.length;
     // التالي/السابق جوّه نفس القسم بس — عشان ما ينقلش الطالب من التاريخ للعربي
@@ -4273,7 +4277,7 @@ const QUESTIONS = [
       ${title("book", esc(l.title))}
       <p class="page-sub">${esc(l.summary)}</p>
       ${l.video ? `<div class="card lesson-video"><h3 class="block-title">${I("play")} ${esc(l.video.title)}</h3>
-        <video controls preload="none" playsinline poster="${esc(l.video.poster)}" src="${esc(l.video.src)}"></video>
+        ${youtubeEmbed(l.video.src) ? `<iframe src="${esc(youtubeEmbed(l.video.src))}" title="${esc(l.video.title)}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>` : `<video controls preload="none" playsinline poster="${esc(l.video.poster)}" src="${esc(l.video.src)}"></video>`}
         <p class="video-note">${I("info")} ${esc(l.video.note)}</p></div>` : ""}
       ${(l.objectives || []).length ? `<div class="card"><h3 class="block-title">${I("target")} هتتعلم في الدرس ده</h3><ul class="obj-list">${l.objectives.map((o) => `<li>${esc(o)}</li>`).join("")}</ul></div>` : ""}
       ${examJump(l)}

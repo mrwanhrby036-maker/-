@@ -515,6 +515,12 @@ textarea.input{min-height:80px;resize:vertical}
 
 /* ===== الرئيسية البسيطة ===== */
 .brand{cursor:pointer}
+/* ===== ماسكوت الصفحة الرئيسية (بومة روائع العلم) ===== */
+.home-mascot{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:4px 0 2px;animation:mascot-float 4.2s ease-in-out infinite}
+.home-mascot img{width:clamp(150px,26vw,230px);height:auto;display:block;filter:drop-shadow(0 18px 26px rgba(74,48,22,.20));transition:transform .35s ease;cursor:pointer;user-select:none}
+.home-mascot img:hover{transform:scale(1.06) rotate(-2deg)}
+@keyframes mascot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
+@media (prefers-reduced-motion:reduce){.home-mascot{animation:none}}
 .home-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:10px}
 .home-prog{min-width:240px;flex:0 1 320px;color:var(--muted);font-size:.95rem}
 .home-prog .progress{margin-top:8px}

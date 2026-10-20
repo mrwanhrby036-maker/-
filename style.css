@@ -369,7 +369,7 @@ textarea.input{min-height:80px;resize:vertical}
 .block{margin-top:22px;animation:fadeUp .45s ease}
 .block-title{display:flex;align-items:center;gap:10px;font-size:1.2rem;margin-bottom:14px;color:var(--espresso)}
 .block-title .i{width:26px;height:26px;padding:4px;border-radius:9px;background:var(--milk);color:var(--coffee);box-sizing:content-box}
-.example-box{background:linear-gradient(135deg,#fbf3e8,#f4e6d4);border-radius:16px;padding:18px 20px;font-family:var(--font-content);font-size:1.2rem;border-right:5px solid var(--caramel)}
+.example-box{background:linear-gradient(135deg,#fbf3e8,#f4e6d4);border-radius:16px;padding:18px 20px;font-family:var(--font-content);font-size:1.2rem;border-right:5px solid var(--caramel);white-space:pre-line;line-height:2.1}
 [data-theme="dark"] .example-box{background:#3a2e25}
 
 /* ---------- التطبيق العملي ---------- */
@@ -501,7 +501,7 @@ textarea.input{min-height:80px;resize:vertical}
 }
 
 /* ===== محتوى الدرس: اقتباس، جدول، مربع الإجابة ===== */
-.quote-box{margin:0;background:var(--milk);border-right:5px solid var(--coffee);border-radius:14px;padding:16px 20px;font-family:var(--font-content);font-size:1.22rem;line-height:2;color:var(--text)}
+.quote-box{margin:0;background:var(--milk);border-right:5px solid var(--coffee);border-radius:14px;padding:16px 20px;font-family:var(--font-content);font-size:1.22rem;line-height:2;color:var(--text);white-space:pre-line}
 .quote-box cite{display:block;margin-top:8px;font-family:var(--font);font-style:normal;font-size:.9rem;color:var(--muted)}
 .lesson-tbl{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:1.02rem}
 .lesson-tbl th{background:var(--coffee);color:#fff;padding:10px 14px;text-align:right;font-weight:700}
@@ -1178,7 +1178,7 @@ body.exam-mode{background:var(--milk)}
   .tj-prog{margin:4px 0}
   .tj-text{font-size:1.12rem}
 }
-.lesson-video video{width:100%;aspect-ratio:16/9;border-radius:14px;background:#2b1d14;display:block}
+.lesson-video video,.lesson-video iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:14px;background:#2b1d14;display:block}
 .video-note{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.92rem;margin-top:10px}
 .video-note .i{width:18px;height:18px;flex:none}
 
